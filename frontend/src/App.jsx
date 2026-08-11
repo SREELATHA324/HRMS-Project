@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "./App.css";
-
+import LandingPage from "./pages/LandingPage";
 import LoginPage from "./LoginPage";
 import ForgotPassword from "./ForgotPassword";
 import VerifyOTP from "./VerifyOTP";
@@ -8,11 +8,17 @@ import ResetPassword from "./ResetPassword";
 import PasswordSuccess from "./PasswordSuccess";
 
 function App() {
-  const [page, setPage] = useState("login");
+  const [page, setPage] = useState("landing");
   const [email, setEmail] = useState("");
 
   return (
     <>
+      {page === "landing" && (
+        <LandingPage
+          onLogin={() => setPage("login")}
+        />
+      )}
+
       {page === "login" && (
         <LoginPage
           onForgotPassword={() => setPage("forgot")}
