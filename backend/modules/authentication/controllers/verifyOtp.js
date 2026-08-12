@@ -32,7 +32,7 @@ async function verifyOTP(req, res) {
         const otpResult = await pool.query(
             `SELECT id, expires_at FROM password_reset_tokens
              WHERE user_id = $1
-             AND token = $2
+             AND token_hash = $2
              AND used_at IS NULL
              ORDER BY created_at DESC LIMIT 1`,
             [userId, otp]

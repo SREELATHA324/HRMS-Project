@@ -38,7 +38,7 @@ async function forgotPassword(req, res) {
         );
 
         await pool.query(
-            `INSERT INTO password_reset_tokens (user_id, token, expires_at)
+            `INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
              VALUES ($1, $2, $3)`,
             [userId, otp, expiresAt]
         );
