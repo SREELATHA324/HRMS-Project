@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { ShieldCheck, ArrowLeft, ArrowRight } from "lucide-react";
+import { api } from "./services/api";
 
 function VerifyOTP({ email, onBack, onReset }) {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (otp.length !== 6) {
@@ -14,7 +17,37 @@ function VerifyOTP({ email, onBack, onReset }) {
     }
 
     setError("");
-    onReset();
+    setLoading(true);
+
+    try {
+      const response = await api.post("/auth/verify-otp", { email, otp });
+      if (response.success) {
+        localStorage.setItem("resetToken", response.resetToken);
+        onReset();
+      } else {
+        setError(response.message || "Invalid OTP");
+      }
+    } catch (error) {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    setResendLoading(true);
+    try {
+      const response = await api.post("/auth/forgot-password", { email });
+      if (response.success) {
+        alert("OTP resent successfully! Check your email.");
+      } else {
+        alert("Failed to resend OTP. Please try again.");
+      }
+    } catch (error) {
+      alert("Network error. Please try again.");
+    } finally {
+      setResendLoading(false);
+    }
   };
 
   return (
@@ -64,15 +97,19 @@ function VerifyOTP({ email, onBack, onReset }) {
             />
           </div>
 
-          <button className="sign-in-button" type="submit">
-            Verify OTP
+          <button type="submit" className="sign-in-button" disabled={loading}>
+            {loading ? "Verifying..." : "Verify OTP"}
             <ArrowRight size={18} />
           </button>
 
         </form>
 
-        <button className="resend-button">
-          Didn't receive the code? Resend OTP
+        <button 
+          className="resend-button" 
+          onClick={handleResendOTP}
+          disabled={resendLoading}
+        >
+          {resendLoading ? "Sending..." : "Didn't receive the code? Resend OTP"}
         </button>
 
       </div>

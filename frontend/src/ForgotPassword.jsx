@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { Mail, ArrowLeft, ArrowRight } from "lucide-react";
+import { api } from "./services/api";
 
 function ForgotPassword({ onBack, onVerify }) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email) {
@@ -14,7 +17,20 @@ function ForgotPassword({ onBack, onVerify }) {
     }
 
     setError("");
-    onVerify(email);
+    setLoading(true);
+
+    try {
+      const response = await api.post("/auth/forgot-password", { email });
+      if (response.success) {
+        onVerify(email);
+      } else {
+        setError(response.message || "Failed to send OTP");
+      }
+    } catch (error) {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -65,8 +81,8 @@ function ForgotPassword({ onBack, onVerify }) {
             </div>
           </div>
 
-          <button className="sign-in-button" type="submit">
-            Send OTP
+          <button type="submit" className="sign-in-button" disabled={loading}>
+            {loading ? "Sending OTP..." : "Send OTP"}
             <ArrowRight size={18} />
           </button>
 

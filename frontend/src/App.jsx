@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import "./App.css";
 
 import LandingPage from "./pages/LandingPage";
@@ -8,96 +7,105 @@ import ForgotPassword from "./ForgotPassword";
 import VerifyOTP from "./VerifyOTP";
 import ResetPassword from "./ResetPassword";
 import PasswordSuccess from "./PasswordSuccess";
+import Dashboard from "./Dashboard";  
 
 function App() {
+  const getPageFromHash = () => {
+    const hash = window.location.hash;
+
+    if (hash === "#login") return "login";
+    if (hash === "#forgot-password") return "forgot";
+    if (hash === "#verify-otp") return "verify";
+    if (hash === "#reset-password") return "reset";
+    if (hash === "#success") return "success";
+    if (hash === "#dashboard") return "dashboard";  
+
+    return "landing";
+  };
+
+  const [page, setPage] = useState(getPageFromHash);
   const [email, setEmail] = useState("");
 
-  return (
-    <Routes>
-      <Route path="/" element={<LandingPageRoute />} />
+  const navigate = (pageName, replace = false) => {
+    const hashMap = {
+      landing: "",
+      login: "login",
+      forgot: "forgot-password",
+      verify: "verify-otp",
+      reset: "reset-password",
+      success: "success",
+      dashboard: "dashboard",  // ← ADD THIS
+    };
 
-      <Route path="/login" element={<LoginPageRoute />} />
+    const hash = `#${hashMap[pageName]}`;
+    
+    if (replace) {
+      window.history.replaceState(null, "", hash);
+    } else {
+      window.history.pushState(null, "", hash);
+    }
+    
+    setPage(pageName);
+  };
 
-      <Route
-        path="/forgot-password"
-        element={<ForgotPasswordRoute setEmail={setEmail} />}
-      />
+  useEffect(() => {
+    const handleHashChange = () => {
+      setPage(getPageFromHash());
+    };
 
-      <Route
-        path="/verify-otp"
-        element={<VerifyOTPRoute email={email} />}
-      />
+    window.addEventListener("hashchange", handleHashChange);
 
-      <Route path="/reset-password" element={<ResetPasswordRoute />} />
-
-      <Route path="/success" element={<PasswordSuccessRoute />} />
-    </Routes>
-  );
-}
-
-function LandingPageRoute() {
-  const navigate = useNavigate();
-
-  return (
-    <LandingPage
-      onLogin={() => navigate("/login")}
-    />
-  );
-}
-
-function LoginPageRoute() {
-  const navigate = useNavigate();
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+    };
+  }, []);
 
   return (
-    <LoginPage
-      onForgotPassword={() => navigate("/forgot-password")}
-    />
-  );
-}
+    <>
+      {page === "landing" && (
+        <LandingPage
+          onLogin={() => navigate("login")}
+        />
+      )}
 
-function ForgotPasswordRoute({ setEmail }) {
-  const navigate = useNavigate();
+      {page === "login" && (
+        <LoginPage
+          onForgotPassword={() => navigate("forgot")}
+        />
+      )}
 
-  return (
-    <ForgotPassword
-      onBack={() => navigate("/login")}
-      onVerify={(emailValue) => {
-        setEmail(emailValue);
-        navigate("/verify-otp");
-      }}
-    />
-  );
-}
+      {page === "forgot" && (
+        <ForgotPassword
+          onBack={() => navigate("login")}
+          onVerify={(emailValue) => {
+            setEmail(emailValue);
+            navigate("verify");
+          }}
+        />
+      )}
 
-function VerifyOTPRoute({ email }) {
-  const navigate = useNavigate();
+      {page === "verify" && (
+        <VerifyOTP
+          email={email}
+          onBack={() => navigate("forgot")}
+          onReset={() => navigate("reset")}
+        />
+      )}
 
-  return (
-    <VerifyOTP
-      email={email}
-      onBack={() => navigate("/forgot-password")}
-      onReset={() => navigate("/reset-password")}
-    />
-  );
-}
+      {page === "reset" && (
+        <ResetPassword
+          onSuccess={() => navigate("success", true)}
+        />
+      )}
 
-function ResetPasswordRoute() {
-  const navigate = useNavigate();
+      {page === "success" && (
+        <PasswordSuccess
+          onLogin={() => navigate("login", true)}
+        />
+      )}
 
-  return (
-    <ResetPassword
-      onSuccess={() => navigate("/success")}
-    />
-  );
-}
-
-function PasswordSuccessRoute() {
-  const navigate = useNavigate();
-
-  return (
-    <PasswordSuccess
-      onLogin={() => navigate("/login")}
-    />
+      {page === "dashboard" && <Dashboard />}  
+    </>
   );
 }
 

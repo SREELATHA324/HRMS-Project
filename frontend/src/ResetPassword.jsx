@@ -5,6 +5,7 @@ import {
   EyeOff,
   ArrowRight
 } from "lucide-react";
+import { api } from "./services/api";
 
 function ResetPassword({ onSuccess }) {
   const [password, setPassword] = useState("");
@@ -12,8 +13,9 @@ function ResetPassword({ onSuccess }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!password || !confirmPassword) {
@@ -32,7 +34,33 @@ function ResetPassword({ onSuccess }) {
     }
 
     setError("");
-    onSuccess();
+    setLoading(true);
+
+    const resetToken = localStorage.getItem("resetToken");
+
+    if (!resetToken) {
+      setError("Reset token not found. Please request a new OTP.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await api.post("/auth/reset-password", {
+        password,
+        confirmPassword,
+        resetToken
+      });
+      if (response.success) {
+        localStorage.removeItem("resetToken");
+        onSuccess();
+      } else {
+        setError(response.message || "Failed to reset password");
+      }
+    } catch (error) {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -124,8 +152,8 @@ function ResetPassword({ onSuccess }) {
             </div>
           </div>
 
-          <button className="sign-in-button" type="submit">
-            Reset Password
+          <button type="submit" className="sign-in-button" disabled={loading}>
+            {loading ? "Resetting..." : "Reset Password"}
             <ArrowRight size={18} />
           </button>
 

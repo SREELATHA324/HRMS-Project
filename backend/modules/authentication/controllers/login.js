@@ -48,7 +48,7 @@ async function login(req, res) {
         }
 
         await pool.query(
-            'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
+            'UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = $1',
             [user.id]
         );
 

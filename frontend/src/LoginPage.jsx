@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
+import { api } from "./services/api";
 
 function LoginPage({onForgotPassword}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [remember, setRemember] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email || !password) {
@@ -17,12 +19,24 @@ function LoginPage({onForgotPassword}) {
     }
 
     setError("");
-    console.log({
-      email,
-      password,
-      remember,
-    });
+    setLoading(true);
+
+    try {
+      const response = await api.post("/auth/login", { email, password });
+      if (response.success) {
+        localStorage.setItem("token", response.token);
+        localStorage.setItem("user", JSON.stringify(response.user));
+        window.location.replace("/#dashboard");
+      } else {
+        setError(response.message || "Login failed");
+      }
+    } catch (error) {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
+
 
   return (
     <div className="login-page">
@@ -190,25 +204,10 @@ function LoginPage({onForgotPassword}) {
 
             </div>
 
-            <label className="remember">
+            <div style={{ marginTop: "20px" }}></div>
 
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(e) =>
-                  setRemember(e.target.checked)
-                }
-              />
-
-              <span>Remember me</span>
-
-            </label>
-
-            <button
-              type="submit"
-              className="sign-in-button"
-            >
-              Sign In
+            <button type="submit" className="sign-in-button" disabled={loading}>
+              {loading ? "Signing in..." : "Sign In"}
               <ArrowRight size={18} />
             </button>
 

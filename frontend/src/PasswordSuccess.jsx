@@ -1,6 +1,11 @@
+import { useEffect } from "react";
 import { CheckCircle, ArrowRight } from "lucide-react";
 
 function PasswordSuccess({ onLogin }) {
+  useEffect(() => {
+    window.history.replaceState(null, "", "/login");
+  }, []);
+
   return (
     <div className="auth-page">
       <div className="auth-card success-card">
