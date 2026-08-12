@@ -51,7 +51,7 @@
 
   margin: auto;
   padding: 60px 70px;
-
+  
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -125,7 +125,7 @@
   margin: 0;
 
   color: #ffffff;
-
+  font-family: "Playfair Display", Georgia, serif;
   font-size: 56px;
   line-height: 1.1;
 
@@ -138,6 +138,7 @@
 .login-left .hero-content h1 span {
   display: block;
   color: #c4b5fd;
+  font-family: "Playfair Display", Georgia, serif;
 }
 
 
@@ -277,7 +278,7 @@
   margin: 0;
 
   color: #0f172a;
-
+  
   font-size: 36px;
   line-height: 1.2;
 

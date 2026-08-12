@@ -37,19 +37,38 @@ function App() {
     window.location.hash = hashMap[pageName];
 
     setPage(pageName);
+
+    if (pageName === "landing") {
+    window.scrollTo({
+      top: 0,
+      behavior: "instant",
+    });
+  }
   };
 
-  useEffect(() => {
-    const handleHashChange = () => {
-      setPage(getPageFromHash());
-    };
+ useEffect(() => {
+  const handleHashChange = () => {
+    const hash = window.location.hash;
+    const nextPage = getPageFromHash();
 
-    window.addEventListener("hashchange", handleHashChange);
+    setPage(nextPage);
 
-    return () => {
-      window.removeEventListener("hashchange", handleHashChange);
-    };
-  }, []);
+    // Only scroll to top when returning to the landing page
+    // without a section hash.
+    if (nextPage === "landing" && hash === "") {
+      window.scrollTo({
+        top: 0,
+        behavior: "instant",
+      });
+    }
+  };
+
+  window.addEventListener("hashchange", handleHashChange);
+
+  return () => {
+    window.removeEventListener("hashchange", handleHashChange);
+  };
+}, []);
 
   return (
     <>
