@@ -34,6 +34,14 @@ function CTA({ onLogin }) {
             <a
               href="#contact"
               className="cta-secondary"
+              onClick={(e) => {
+                e.preventDefault();
+
+                document.getElementById("contact")?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
+              }}
             >
               Talk to Our Team
             </a>
@@ -41,7 +49,6 @@ function CTA({ onLogin }) {
           </div>
 
         </div>
-
       </div>
     </section>
   );

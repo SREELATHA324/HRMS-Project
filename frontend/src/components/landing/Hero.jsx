@@ -27,10 +27,17 @@ function Hero({ onLogin }) {
             >
               Get Started
             </button>
-
             <a
               href="#features"
               className="hero-secondary-button"
+              onClick={(e) => {
+                e.preventDefault();
+
+                document.getElementById("features")?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
+              }}
             >
               Explore Features
               <span>→</span>
