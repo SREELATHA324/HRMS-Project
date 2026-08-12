@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import "./App.css";
 
 import LandingPage from "./pages/LandingPage";
@@ -9,92 +10,94 @@ import ResetPassword from "./ResetPassword";
 import PasswordSuccess from "./PasswordSuccess";
 
 function App() {
-  const getPageFromHash = () => {
-    const hash = window.location.hash;
-
-    if (hash === "#login") return "login";
-    if (hash === "#forgot-password") return "forgot";
-    if (hash === "#verify-otp") return "verify";
-    if (hash === "#reset-password") return "reset";
-    if (hash === "#success") return "success";
-
-    return "landing";
-  };
-
-  const [page, setPage] = useState(getPageFromHash);
   const [email, setEmail] = useState("");
 
-  const navigate = (pageName) => {
-    const hashMap = {
-      landing: "",
-      login: "login",
-      forgot: "forgot-password",
-      verify: "verify-otp",
-      reset: "reset-password",
-      success: "success",
-    };
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPageRoute />} />
 
-    window.location.hash = hashMap[pageName];
+      <Route path="/login" element={<LoginPageRoute />} />
 
-    setPage(pageName);
-  };
+      <Route
+        path="/forgot-password"
+        element={<ForgotPasswordRoute setEmail={setEmail} />}
+      />
 
-  useEffect(() => {
-    const handleHashChange = () => {
-      setPage(getPageFromHash());
-    };
+      <Route
+        path="/verify-otp"
+        element={<VerifyOTPRoute email={email} />}
+      />
 
-    window.addEventListener("hashchange", handleHashChange);
+      <Route path="/reset-password" element={<ResetPasswordRoute />} />
 
-    return () => {
-      window.removeEventListener("hashchange", handleHashChange);
-    };
-  }, []);
+      <Route path="/success" element={<PasswordSuccessRoute />} />
+    </Routes>
+  );
+}
+
+function LandingPageRoute() {
+  const navigate = useNavigate();
 
   return (
-    <>
-      {page === "landing" && (
-        <LandingPage
-          onLogin={() => navigate("login")}
-        />
-      )}
+    <LandingPage
+      onLogin={() => navigate("/login")}
+    />
+  );
+}
 
-      {page === "login" && (
-        <LoginPage
-          onForgotPassword={() => navigate("forgot")}
-        />
-      )}
+function LoginPageRoute() {
+  const navigate = useNavigate();
 
-      {page === "forgot" && (
-        <ForgotPassword
-          onBack={() => navigate("login")}
-          onVerify={(emailValue) => {
-            setEmail(emailValue);
-            navigate("verify");
-          }}
-        />
-      )}
+  return (
+    <LoginPage
+      onForgotPassword={() => navigate("/forgot-password")}
+    />
+  );
+}
 
-      {page === "verify" && (
-        <VerifyOTP
-          email={email}
-          onBack={() => navigate("forgot")}
-          onReset={() => navigate("reset")}
-        />
-      )}
+function ForgotPasswordRoute({ setEmail }) {
+  const navigate = useNavigate();
 
-      {page === "reset" && (
-        <ResetPassword
-          onSuccess={() => navigate("success")}
-        />
-      )}
+  return (
+    <ForgotPassword
+      onBack={() => navigate("/login")}
+      onVerify={(emailValue) => {
+        setEmail(emailValue);
+        navigate("/verify-otp");
+      }}
+    />
+  );
+}
 
-      {page === "success" && (
-        <PasswordSuccess
-          onLogin={() => navigate("login")}
-        />
-      )}
-    </>
+function VerifyOTPRoute({ email }) {
+  const navigate = useNavigate();
+
+  return (
+    <VerifyOTP
+      email={email}
+      onBack={() => navigate("/forgot-password")}
+      onReset={() => navigate("/reset-password")}
+    />
+  );
+}
+
+function ResetPasswordRoute() {
+  const navigate = useNavigate();
+
+  return (
+    <ResetPassword
+      onSuccess={() => navigate("/success")}
+    />
+  );
+}
+
+function PasswordSuccessRoute() {
+  const navigate = useNavigate();
+
+  return (
+    <PasswordSuccess
+      onLogin={() => navigate("/login")}
+    />
   );
 }
 
