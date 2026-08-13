@@ -256,10 +256,7 @@ function Employees({ onNavigate }) {
                             type="button"
                             title="View Employee"
                             onClick={() =>
-                              console.log(
-                                "View employee:",
-                                employee.id
-                              )
+                              onNavigate("employeeDetails", employee.id)
                             }
                           >
                             <Eye size={16} />
