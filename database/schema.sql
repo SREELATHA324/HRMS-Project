@@ -234,13 +234,32 @@ ON employee_status_history("employeeId");
 CREATE INDEX idx_branches_company_id
 ON branches(company_id);
 
-CREATE INDEX idx_users_role_id ON users(role_id);
-CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id);
-CREATE INDEX idx_user_sessions_expires_at ON user_sessions(expires_at);
-CREATE INDEX idx_password_reset_tokens_user_id ON password_reset_tokens(user_id);
-CREATE INDEX idx_password_history_user_id ON password_history(user_id);
-CREATE INDEX idx_email_verification_tokens_user_id ON email_verification_tokens(user_id);
-CREATE INDEX idx_login_history_user_id ON login_history(user_id);
-CREATE INDEX idx_login_history_login_at ON login_history(login_at);
-CREATE INDEX idx_security_history_user_id ON security_history(user_id);
-CREATE INDEX idx_security_history_created_at ON security_history(created_at);
+CREATE INDEX idx_users_role_id 
+ON users(role_id);
+
+CREATE INDEX idx_user_sessions_user_id 
+ON user_sessions(user_id);
+
+CREATE INDEX idx_user_sessions_expires_at 
+ON user_sessions(expires_at);
+
+CREATE INDEX idx_password_reset_tokens_user_id 
+ON password_reset_tokens(user_id);
+
+CREATE INDEX idx_password_history_user_id 
+ON password_history(user_id);
+
+CREATE INDEX idx_email_verification_tokens_user_id 
+ON email_verification_tokens(user_id);
+
+CREATE INDEX idx_login_history_user_id 
+ON login_history(user_id);
+
+CREATE INDEX idx_login_history_login_at 
+ON login_history(login_at);
+
+CREATE INDEX idx_security_history_user_id 
+ON security_history(user_id);
+
+CREATE INDEX idx_security_history_created_at 
+ON security_history(created_at);
