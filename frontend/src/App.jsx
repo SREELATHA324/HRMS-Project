@@ -12,6 +12,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import Employees from "./pages/admin/Employees";
 import AddEmployee from "./pages/admin/AddEmployee";
 import EmployeeDetails from "./pages/admin/EmployeeDetails";
+import EditEmployee from "./pages/admin/EditEmployee";
 function App() {
   const getPageFromHash = () => {
     const hash = window.location.hash;
@@ -26,6 +27,9 @@ function App() {
     if (hash === "#admin/employees/add") return "addEmployee";
     if (hash.startsWith("#admin/employees/view/")) {
   return "employeeDetails";
+    if (hash.startsWith("#admin/employees/edit/")) {
+  return "editEmployee";
+}
 }
     return "landing";
   };
@@ -34,6 +38,15 @@ function App() {
   const [email, setEmail] = useState("");
   const getEmployeeIdFromHash = () => {
   const prefix = "#admin/employees/view/";
+
+  if (!window.location.hash.startsWith(prefix)) {
+    return null;
+  }
+
+  return window.location.hash.substring(prefix.length);
+};
+const getEditEmployeeIdFromHash = () => {
+  const prefix = "#admin/employees/edit/";
 
   if (!window.location.hash.startsWith(prefix)) {
     return null;
@@ -54,6 +67,7 @@ function App() {
       employees: "admin/employees",
       addEmployee: "admin/employees/add",
       employeeDetails: `admin/employees/view/${value}`,
+      editEmployee: `admin/employees/edit/${value}`,
     };
    
 
@@ -182,6 +196,12 @@ function App() {
       {page === "employeeDetails" && (
   <EmployeeDetails
     employeeId={getEmployeeIdFromHash()}
+    onNavigate={navigate}
+  />
+)}
+{page === "editEmployee" && (
+  <EditEmployee
+    employeeId={getEditEmployeeIdFromHash()}
     onNavigate={navigate}
   />
 )}
