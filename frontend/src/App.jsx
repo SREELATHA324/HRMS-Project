@@ -8,7 +8,9 @@ import VerifyOTP from "./VerifyOTP";
 import ResetPassword from "./ResetPassword";
 import PasswordSuccess from "./PasswordSuccess";
 import Dashboard from "./Dashboard";  
-
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import Employees from "./pages/admin/Employees";
+import AddEmployee from "./pages/admin/AddEmployee";
 function App() {
   const getPageFromHash = () => {
     const hash = window.location.hash;
@@ -18,7 +20,9 @@ function App() {
     if (hash === "#verify-otp") return "verify";
     if (hash === "#reset-password") return "reset";
     if (hash === "#success") return "success";
-    if (hash === "#dashboard") return "dashboard";  
+    if (hash === "#dashboard") return "dashboard";
+    if (hash === "#admin/employees") return "employees";
+    if (hash === "#admin/employees/add") return "addEmployee";
 
     return "landing";
   };
@@ -34,37 +38,30 @@ function App() {
       verify: "verify-otp",
       reset: "reset-password",
       success: "success",
-      dashboard: "dashboard",  // ← ADD THIS
+      dashboard: "dashboard",
+      employees: "admin/employees",
+      addEmployee: "admin/employees/add",
     };
 
-    const hash = `#${hashMap[pageName]}`;
-    
-    if (replace) {
-      window.history.replaceState(null, "", hash);
-    } else {
-      window.history.pushState(null, "", hash);
+    const hash = hashMap[pageName];
+
+    // Safety check
+    if (hash === undefined) {
+      console.error(`Unknown page: ${pageName}`);
+      return;
     }
-    
+
+    const url = hash ? `#${hash}` : window.location.pathname;
+
+    if (replace) {
+      window.history.replaceState(null, "", url);
+    } else {
+      window.history.pushState(null, "", url);
+    }
+
     setPage(pageName);
 
     if (pageName === "landing") {
-    window.scrollTo({
-      top: 0,
-      behavior: "instant",
-    });
-  }
-  };
-
- useEffect(() => {
-  const handleHashChange = () => {
-    const hash = window.location.hash;
-    const nextPage = getPageFromHash();
-
-    setPage(nextPage);
-
-    // Only scroll to top when returning to the landing page
-    // without a section hash.
-    if (nextPage === "landing" && hash === "") {
       window.scrollTo({
         top: 0,
         behavior: "instant",
@@ -72,12 +69,38 @@ function App() {
     }
   };
 
-  window.addEventListener("hashchange", handleHashChange);
+  useEffect(() => {
+    const handleNavigation = () => {
+      const nextPage = getPageFromHash();
 
-  return () => {
-    window.removeEventListener("hashchange", handleHashChange);
+      setPage(nextPage);
+
+      if (nextPage === "landing" && window.location.hash === "") {
+        window.scrollTo({
+          top: 0,
+          behavior: "instant",
+        });
+      }
+    };
+
+    // Browser Back / Forward
+    window.addEventListener("popstate", handleNavigation);
+
+    // Hash navigation
+    window.addEventListener("hashchange", handleNavigation);
+
+    return () => {
+      window.removeEventListener("popstate", handleNavigation);
+      window.removeEventListener("hashchange", handleNavigation);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    navigate("login", true);
   };
-}, []);
 
   return (
     <>
@@ -123,7 +146,24 @@ function App() {
         />
       )}
 
-      {page === "dashboard" && <Dashboard />}  
+      {page === "dashboard" && (
+        <AdminDashboard
+          onNavigate={navigate}
+          onLogout={handleLogout}
+        />
+      )}
+
+      {page === "employees" && (
+        <Employees
+          onNavigate={navigate}
+        />
+      )}
+
+      {page === "addEmployee" && (
+        <AddEmployee
+          onNavigate={navigate}
+        />
+      )}
     </>
   );
 }
