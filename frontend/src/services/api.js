@@ -18,6 +18,11 @@ const handleResponse = async (response) => {
   const data = await response.json();
 
   if (!response.ok) {
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+    }
     throw new Error(
       data.message ||
       data.detail ||
