@@ -1,7 +1,7 @@
 const pool = require('../../../db');
 const jwt = require('jsonwebtoken');
 const { hashPassword } = require('../utils/auth');
-const { validateResetPasswordInput } = require('../utils/validators');
+const { validateResetPasswordInput, validatePasswordStrength } = require('../utils/validators');
 
 async function resetPassword(req, res) {
     const { password, confirmPassword, resetToken } = req.body;
@@ -19,6 +19,15 @@ async function resetPassword(req, res) {
             success: false,
             message: 'Validation failed',
             errors: validation.errors
+        });
+    }
+
+    const strengthValidation = validatePasswordStrength(password);
+    if (!strengthValidation.isValid) {
+        return res.status(400).json({
+            success: false,
+            message: 'Password is not strong enough',
+            errors: strengthValidation.errors
         });
     }
 
