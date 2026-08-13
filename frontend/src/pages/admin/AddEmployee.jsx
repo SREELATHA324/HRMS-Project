@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "../../services/api";
+
 function AddEmployee({ onNavigate }) {
   const [formData, setFormData] = useState({
     employeeCode: "",
@@ -22,12 +23,31 @@ function AddEmployee({ onNavigate }) {
     employmentType: "Full-time",
     status: "Active",
   });
+
+  const [departments, setDepartments] = useState([]);
+  const [designations, setDesignations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    loadDropdownData();
+  }, []);
+
+  const loadDropdownData = async () => {
+    try {
+      const [deptRes, desigRes] = await Promise.all([
+        api.get("/employees/departments"),
+        api.get("/employees/designations"),
+      ]);
+      if (deptRes.success) setDepartments(deptRes.data);
+      if (desigRes.success) setDesignations(desigRes.data);
+    } catch (error) {
+      console.error("Load dropdown error:", error);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -35,58 +55,51 @@ function AddEmployee({ onNavigate }) {
   };
 
   const handleBackToEmployees = () => {
-    window.history.back();
+    if (onNavigate) {
+      onNavigate("employees");
+    } else {
+      window.history.back();
+    }
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-  setError("");
-  setLoading(true);
+    try {
+      const employeeData = {
+        ...formData,
+        departmentId: Number(formData.departmentId),
+        designationId: Number(formData.designationId),
+        reportingManagerId:
+          formData.reportingManagerId === ""
+            ? null
+            : Number(formData.reportingManagerId),
+      };
 
-  try {
-    const employeeData = {
-      ...formData,
+      const response = await api.post("/employees", employeeData);
 
-      departmentId: Number(formData.departmentId),
-      designationId: Number(formData.designationId),
-
-      reportingManagerId:
-        formData.reportingManagerId === ""
-          ? null
-          : Number(formData.reportingManagerId),
-    };
-
-    const response = await api.post(
-      "/employees",
-      employeeData
-    );
-
-    if (response.success) {
-  window.history.back();
-}
-    else {
-      setError(
-        response.message || "Failed to add employee"
-      );
+      if (response.success) {
+        if (onNavigate) {
+          onNavigate("employees");
+        } else {
+          window.history.back();
+        }
+      } else {
+        setError(response.message || "Failed to add employee");
+      }
+    } catch (error) {
+      console.error("Add employee error:", error);
+      setError(error.message || "Failed to add employee");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("Add employee error:", error);
-
-    setError(
-      error.message || "Failed to add employee"
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="admin-page">
-
-      {/* Page Header */}
       <div className="admin-page-header">
-
         <div>
           <button
             type="button"
@@ -96,45 +109,31 @@ function AddEmployee({ onNavigate }) {
             <ArrowLeft size={17} />
             Back to Employees
           </button>
-
           <h1>Add Employee</h1>
-
           <p>
             Add a new employee to your organization.
           </p>
         </div>
-
       </div>
+
       {error && (
-  <div className="admin-form-error">
-    {error}
-  </div>
-)}
+        <div className="admin-form-error">
+          {error}
+        </div>
+      )}
 
-      <form
-        className="admin-form-card"
-        onSubmit={handleSubmit}
-      >
-
-        {/* =====================================================
-            PERSONAL DETAILS
-        ====================================================== */}
-
+      <form className="admin-form-card" onSubmit={handleSubmit}>
         <section className="admin-form-section">
-
           <div className="admin-form-section-header">
             <h2>Personal Details</h2>
             <p>Enter the employee's personal information.</p>
           </div>
 
           <div className="admin-form-grid">
-
-            {/* First Name */}
             <div className="admin-form-group">
               <label htmlFor="firstName">
                 First Name <span>*</span>
               </label>
-
               <input
                 id="firstName"
                 name="firstName"
@@ -146,12 +145,10 @@ function AddEmployee({ onNavigate }) {
               />
             </div>
 
-            {/* Last Name */}
             <div className="admin-form-group">
               <label htmlFor="lastName">
                 Last Name
               </label>
-
               <input
                 id="lastName"
                 name="lastName"
@@ -162,12 +159,10 @@ function AddEmployee({ onNavigate }) {
               />
             </div>
 
-            {/* Email */}
             <div className="admin-form-group">
               <label htmlFor="email">
                 Email <span>*</span>
               </label>
-
               <input
                 id="email"
                 name="email"
@@ -179,12 +174,10 @@ function AddEmployee({ onNavigate }) {
               />
             </div>
 
-            {/* Phone */}
             <div className="admin-form-group">
               <label htmlFor="phone">
                 Phone
               </label>
-
               <input
                 id="phone"
                 name="phone"
@@ -195,12 +188,10 @@ function AddEmployee({ onNavigate }) {
               />
             </div>
 
-            {/* Date of Birth */}
             <div className="admin-form-group">
               <label htmlFor="dateOfBirth">
                 Date of Birth
               </label>
-
               <input
                 id="dateOfBirth"
                 name="dateOfBirth"
@@ -210,12 +201,10 @@ function AddEmployee({ onNavigate }) {
               />
             </div>
 
-            {/* Gender */}
             <div className="admin-form-group">
               <label htmlFor="gender">
                 Gender
               </label>
-
               <select
                 id="gender"
                 name="gender"
@@ -229,12 +218,10 @@ function AddEmployee({ onNavigate }) {
               </select>
             </div>
 
-            {/* Address */}
             <div className="admin-form-group full-width">
               <label htmlFor="address">
                 Address
               </label>
-
               <textarea
                 id="address"
                 name="address"
@@ -245,12 +232,10 @@ function AddEmployee({ onNavigate }) {
               />
             </div>
 
-            {/* City */}
             <div className="admin-form-group">
               <label htmlFor="city">
                 City
               </label>
-
               <input
                 id="city"
                 name="city"
@@ -261,12 +246,10 @@ function AddEmployee({ onNavigate }) {
               />
             </div>
 
-            {/* State */}
             <div className="admin-form-group">
               <label htmlFor="state">
                 State
               </label>
-
               <input
                 id="state"
                 name="state"
@@ -277,12 +260,10 @@ function AddEmployee({ onNavigate }) {
               />
             </div>
 
-            {/* Country */}
             <div className="admin-form-group">
               <label htmlFor="country">
                 Country
               </label>
-
               <input
                 id="country"
                 name="country"
@@ -293,12 +274,10 @@ function AddEmployee({ onNavigate }) {
               />
             </div>
 
-            {/* Pincode */}
             <div className="admin-form-group">
               <label htmlFor="pincode">
                 Pincode
               </label>
-
               <input
                 id="pincode"
                 name="pincode"
@@ -308,30 +287,20 @@ function AddEmployee({ onNavigate }) {
                 placeholder="Enter pincode"
               />
             </div>
-
           </div>
         </section>
 
-
-        {/* =====================================================
-            EMPLOYMENT DETAILS
-        ====================================================== */}
-
         <section className="admin-form-section">
-
           <div className="admin-form-section-header">
             <h2>Employment Details</h2>
             <p>Enter the employee's organization information.</p>
           </div>
 
           <div className="admin-form-grid">
-
-            {/* Employee Code */}
             <div className="admin-form-group">
               <label htmlFor="employeeCode">
                 Employee Code <span>*</span>
               </label>
-
               <input
                 id="employeeCode"
                 name="employeeCode"
@@ -343,12 +312,10 @@ function AddEmployee({ onNavigate }) {
               />
             </div>
 
-            {/* Department */}
             <div className="admin-form-group">
               <label htmlFor="departmentId">
                 Department <span>*</span>
               </label>
-
               <select
                 id="departmentId"
                 name="departmentId"
@@ -356,38 +323,19 @@ function AddEmployee({ onNavigate }) {
                 onChange={handleChange}
                 required
               >
-                <option value="">
-                  Select department
-                </option>
-
-                <option value="1">
-                  Engineering
-                </option>
-
-                <option value="2">
-                  Human Resources
-                </option>
-
-                <option value="3">
-                  Sales
-                </option>
-
-                <option value="4">
-                  Finance
-                </option>
-
-                <option value="5">
-                  Marketing
-                </option>
+                <option value="">Select department</option>
+                {departments.map((dept) => (
+                  <option key={dept.id} value={dept.id}>
+                    {dept.name}
+                  </option>
+                ))}
               </select>
             </div>
 
-            {/* Designation */}
             <div className="admin-form-group">
               <label htmlFor="designationId">
                 Designation <span>*</span>
               </label>
-
               <select
                 id="designationId"
                 name="designationId"
@@ -395,68 +343,33 @@ function AddEmployee({ onNavigate }) {
                 onChange={handleChange}
                 required
               >
-                <option value="">
-                  Select designation
-                </option>
-
-                <option value="1">
-                  Software Engineer
-                </option>
-
-                <option value="2">
-                  Junior Developer
-                </option>
-
-                <option value="3">
-                  HR Manager
-                </option>
-
-                <option value="4">
-                  Sales Executive
-                </option>
-
-                <option value="5">
-                  Finance Manager
-                </option>
+                <option value="">Select designation</option>
+                {designations.map((desig) => (
+                  <option key={desig.id} value={desig.id}>
+                    {desig.name}
+                  </option>
+                ))}
               </select>
             </div>
 
-            {/* Reporting Manager */}
             <div className="admin-form-group">
               <label htmlFor="reportingManagerId">
                 Reporting Manager
               </label>
-
               <select
                 id="reportingManagerId"
                 name="reportingManagerId"
                 value={formData.reportingManagerId}
                 onChange={handleChange}
               >
-                <option value="">
-                  Select reporting manager
-                </option>
-
-                <option value="1">
-                  Administrator
-                </option>
-
-                <option value="2">
-                  HR Manager
-                </option>
-
-                <option value="3">
-                  Finance Manager
-                </option>
+                <option value="">Select reporting manager</option>
               </select>
             </div>
 
-            {/* Joining Date */}
             <div className="admin-form-group">
               <label htmlFor="joiningDate">
                 Joining Date <span>*</span>
               </label>
-
               <input
                 id="joiningDate"
                 name="joiningDate"
@@ -467,12 +380,10 @@ function AddEmployee({ onNavigate }) {
               />
             </div>
 
-            {/* Employment Type */}
             <div className="admin-form-group">
               <label htmlFor="employmentType">
                 Employment Type <span>*</span>
               </label>
-
               <select
                 id="employmentType"
                 name="employmentType"
@@ -480,74 +391,46 @@ function AddEmployee({ onNavigate }) {
                 onChange={handleChange}
                 required
               >
-                <option value="Full-time">
-                  Full-time
-                </option>
-
-                <option value="Part-time">
-                  Part-time
-                </option>
-
-                <option value="Contract">
-                  Contract
-                </option>
-
-                <option value="Intern">
-                  Intern
-                </option>
+                <option value="Full-time">Full-time</option>
+                <option value="Part-time">Part-time</option>
+                <option value="Contract">Contract</option>
+                <option value="Intern">Intern</option>
               </select>
             </div>
 
-            {/* Status */}
             <div className="admin-form-group">
               <label htmlFor="status">
                 Status
               </label>
-
               <select
                 id="status"
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
               >
-                <option value="Active">
-                  Active
-                </option>
-
-                <option value="Inactive">
-                  Inactive
-                </option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
               </select>
             </div>
-
           </div>
         </section>
 
-
-        {/* =====================================================
-            FORM ACTIONS
-        ====================================================== */}
-
         <div className="admin-form-actions">
-
           <button
             type="button"
             className="admin-secondary-button"
             onClick={handleBackToEmployees}
-
           >
             Cancel
           </button>
-
           <button
             type="submit"
             className="admin-primary-button"
             disabled={loading}
-            >
+          >
             {loading ? "Adding Employee..." : "Add Employee"}
-            </button>
+          </button>
         </div>
-
       </form>
     </div>
   );

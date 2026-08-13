@@ -10,6 +10,7 @@ async function adminDashboard(req, res) {
             "SELECT COUNT(*) FROM employees WHERE status != 'Active'"
         );
         const departments = await pool.query('SELECT COUNT(*) FROM departments');
+
         const recentEmployees = await pool.query(
             `SELECT e.id, e."employeeCode", e."firstName", e."lastName", e.email, 
                     d.name as department_name, e.status, e."joiningDate"
@@ -17,6 +18,49 @@ async function adminDashboard(req, res) {
              LEFT JOIN departments d ON e."departmentId" = d.id
              ORDER BY e.created_at DESC LIMIT 5`
         );
+
+        const newEmployeeActivities = await pool.query(
+            `SELECT 
+                'new_employee' as type,
+                e."firstName" || ' ' || e."lastName" as employee_name,
+                e.created_at as activity_date,
+                'New employee added: ' || e."firstName" || ' ' || e."lastName" as description
+             FROM employees e
+             ORDER BY e.created_at DESC LIMIT 10`
+        );
+
+        const statusChangeActivities = await pool.query(
+            `SELECT 
+                'status_change' as type,
+                e."firstName" || ' ' || e."lastName" as employee_name,
+                esh."effectiveDate" as activity_date,
+                'Status changed from ' || esh."oldStatus" || ' to ' || esh."newStatus" as description
+             FROM employee_status_history esh
+             JOIN employees e ON esh."employeeId" = e.id
+             ORDER BY esh.created_at DESC LIMIT 10`
+        );
+
+        const employeeHistoryActivities = await pool.query(
+            `SELECT 
+                'employee_update' as type,
+                e."firstName" || ' ' || e."lastName" as employee_name,
+                eh."effectiveDate" as activity_date,
+                'Employee details updated' as description
+             FROM employee_history eh
+             JOIN employees e ON eh."employeeId" = e.id
+             WHERE eh."changeType" = 'Updated'
+             ORDER BY eh.created_at DESC LIMIT 10`
+        );
+
+        const allActivities = [
+            ...newEmployeeActivities.rows,
+            ...statusChangeActivities.rows,
+            ...employeeHistoryActivities.rows
+        ];
+
+        allActivities.sort((a, b) => new Date(b.activity_date) - new Date(a.activity_date));
+
+        const recentActivities = allActivities.slice(0, 10);
 
         const departmentStats = await pool.query(
             `SELECT d.name, COUNT(e.id) as count
@@ -35,6 +79,7 @@ async function adminDashboard(req, res) {
                 inactiveEmployees: parseInt(inactiveEmployees.rows[0].count),
                 departments: parseInt(departments.rows[0].count),
                 recentEmployees: recentEmployees.rows,
+                recentActivities: recentActivities,
                 departmentStats: departmentStats.rows
             }
         });
