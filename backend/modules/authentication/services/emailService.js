@@ -69,7 +69,32 @@ async function sendPasswordResetEmail(email, otp) {
     return await sendEmail(email, subject, text);
 }
 
+async function sendWelcomeEmail(email, name, tempPassword) {
+    const appName = process.env.APP_NAME || 'HRMS';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const subject = `Welcome to ${appName} - Your Account Details`;
+    const text = `
+Dear ${name},
+
+Welcome to ${appName}!
+
+Your account has been created successfully. Here are your login credentials:
+
+Email: ${email}
+Temporary Password: ${tempPassword}
+
+Please login and change your password immediately.
+
+Login URL: ${frontendUrl}/login
+
+Best regards,
+${appName} Team
+`;
+    return await sendEmail(email, subject, text);
+}
+
 module.exports = {
     sendOTPEmail,
-    sendPasswordResetEmail
+    sendPasswordResetEmail,
+    sendWelcomeEmail
 };
