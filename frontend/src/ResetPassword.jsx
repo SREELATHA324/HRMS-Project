@@ -6,9 +6,6 @@ import {
   ArrowRight,
   Check,
   X,
-  ArrowRight,
-  Check,
-  X,
 } from "lucide-react";
 import { api } from "./services/api";
 
@@ -16,28 +13,11 @@ function ResetPassword({ onSuccess }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const passwordRules = {
-    length: password.length >= 8,
-    uppercase: /[A-Z]/.test(password),
-    lowercase: /[a-z]/.test(password),
-    number: /[0-9]/.test(password),
-    special: /[!@#$%^&*(),.?":{}|<>[\]\\/'`~_+=;-]/.test(password),
-  };
-
-  const isStrongPassword =
-    passwordRules.length &&
-    passwordRules.uppercase &&
-    passwordRules.lowercase &&
-    passwordRules.number &&
-    passwordRules.special;
 
   const passwordRules = {
     length: password.length >= 8,
@@ -58,17 +38,11 @@ function ResetPassword({ onSuccess }) {
     e.preventDefault();
     setError("");
 
-    setError("");
-
     if (!password || !confirmPassword) {
       setError("Please enter both password fields.");
       return;
     }
 
-    if (!isStrongPassword) {
-      setError(
-        "Password must contain 8+ characters, uppercase, lowercase, number and special character."
-      );
     if (!passwordRules.length) {
       setError("Password must contain at least 8 characters.");
       return;
@@ -94,6 +68,11 @@ function ResetPassword({ onSuccess }) {
       return;
     }
 
+    if (!isStrongPassword) {
+      setError("Please enter a strong password.");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
@@ -108,29 +87,20 @@ function ResetPassword({ onSuccess }) {
 
     setLoading(true);
 
-    setLoading(true);
-
     try {
       const response = await api.post("/auth/reset-password", {
         password,
         confirmPassword,
         resetToken,
-        resetToken,
       });
-
 
       if (response.success) {
         localStorage.removeItem("resetToken");
         onSuccess();
       } else {
         setError(response.message || "Failed to reset password.");
-        setError(response.message || "Failed to reset password.");
       }
     } catch (error) {
-      setError(
-        error?.response?.data?.message ||
-          "Network error. Please try again."
-      );
       setError(
         error?.response?.data?.message ||
           "Network error. Please try again."
@@ -139,13 +109,6 @@ function ResetPassword({ onSuccess }) {
       setLoading(false);
     }
   };
-
-  const Rule = ({ valid, children }) => (
-    <div className={`password-rule ${valid ? "valid" : ""}`}>
-      {valid ? <Check size={14} /> : <X size={14} />}
-      <span>{children}</span>
-    </div>
-  );
 
   const Rule = ({ valid, children }) => (
     <div className={`password-rule ${valid ? "valid" : ""}`}>
@@ -165,12 +128,9 @@ function ResetPassword({ onSuccess }) {
         <div className="auth-heading">
           <span>RESET PASSWORD</span>
 
-
           <h1>Create new password</h1>
 
-
           <p>
-            Create a strong password to secure your HRMS account.
             Create a strong password to secure your HRMS account.
           </p>
         </div>
@@ -183,8 +143,6 @@ function ResetPassword({ onSuccess }) {
             </div>
           )}
 
-          {/* New Password */}
-          {/* New Password */}
           <div className="field">
             <label>New Password</label>
 
@@ -206,7 +164,6 @@ function ResetPassword({ onSuccess }) {
                 className="eye-button"
                 onClick={() =>
                   setShowPassword((previous) => !previous)
-                  setShowPassword((previous) => !previous)
                 }
               >
                 {showPassword ? (
@@ -217,36 +174,6 @@ function ResetPassword({ onSuccess }) {
               </button>
             </div>
           </div>
-
-          {/* Password Requirements */}
-          <div className="password-rules">
-            <p className="rules-title">
-              Password requirements
-            </p>
-
-            <Rule valid={passwordRules.length}>
-              At least 8 characters
-            </Rule>
-
-            <Rule valid={passwordRules.uppercase}>
-              At least one uppercase letter
-            </Rule>
-
-            <Rule valid={passwordRules.lowercase}>
-              At least one lowercase letter
-            </Rule>
-
-            <Rule valid={passwordRules.number}>
-              At least one number
-            </Rule>
-
-            <Rule valid={passwordRules.special}>
-              At least one special character
-            </Rule>
-          </div>
-
-          {/* Confirm Password */}
-          {/* Password Requirements */}
           {password.length > 0 && (
             <div className="password-rules">
               <p className="rules-title">
@@ -275,7 +202,6 @@ function ResetPassword({ onSuccess }) {
             </div>
           )}
 
-          {/* Confirm Password */}
           <div className="field">
             <label>Confirm Password</label>
 
@@ -296,7 +222,6 @@ function ResetPassword({ onSuccess }) {
                 type="button"
                 className="eye-button"
                 onClick={() =>
-                  setShowConfirm((previous) => !previous)
                   setShowConfirm((previous) => !previous)
                 }
               >
@@ -321,37 +246,14 @@ function ResetPassword({ onSuccess }) {
                   : "Passwords do not match"}
               </div>
             )}
-
-            {confirmPassword && (
-              <div
-                className={
-                  password === confirmPassword
-                    ? "password-match"
-                    : "password-not-match"
-                }
-              >
-                {password === confirmPassword
-                  ? "Passwords match"
-                  : "Passwords do not match"}
-              </div>
-            )}
           </div>
 
-          {/* Submit */}
-          <button
-            type="submit"
-            className="sign-in-button"
-            disabled={loading}
-          >
-          {/* Submit */}
           <button
             type="submit"
             className="sign-in-button"
             disabled={loading}
           >
             {loading ? "Resetting..." : "Reset Password"}
-
-            {!loading && <ArrowRight size={18} />}
 
             {!loading && <ArrowRight size={18} />}
           </button>
