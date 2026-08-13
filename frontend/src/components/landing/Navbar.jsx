@@ -93,7 +93,6 @@ function Navbar({ onLogin }) {
           >
             Login
           </button>
-
           
         </div>
 

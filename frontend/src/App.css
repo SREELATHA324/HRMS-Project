@@ -815,14 +815,11 @@
   box-shadow: 0 4px 12px rgba(79, 70, 165, 0.18);
 }
 
-
 .navbar-brand-text {
   display: flex;
   flex-direction: column;
-
   gap: 2px;
 }
-
 
 .navbar-brand-text strong {
   color: #111827;
