@@ -2,6 +2,15 @@ const pool = require('../../../db');
 const { hashPassword } = require('../../authentication/utils/auth');
 const { sendWelcomeEmail } = require('../../authentication/services/emailService');
 
+function generateTempPassword() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+}
+
 async function createEmployee(req, res) {
     const {
         employeeCode, firstName, lastName, email, phone,
@@ -54,13 +63,14 @@ async function createEmployee(req, res) {
                 "dateOfBirth", gender, address, city, state, country,
                 pincode, "departmentId", "designationId", "reportingManagerId",
                 "joiningDate", "employmentType", status
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
-                      $12, $13, $14, $15, $16, $17, $18, $19)
+            ) VALUES ($1, $2, $3, $4, $5, $6, 
+                      $7, $8, $9, $10, $11, $12,
+                      $13, $14, $15, $16, $17, $18, $19)
              RETURNING *`,
             [userId, employeeCode, firstName, lastName, email, phone,
-             dateOfBirth, gender, address, city, state, country,
+             dateOfBirth || null, gender, address, city, state, country,
              pincode, departmentId, designationId, reportingManagerId,
-             joiningDate, employmentType, status || 'Active']
+             joiningDate || null, employmentType, status || 'Active']
         );
 
         await pool.query(
@@ -84,15 +94,6 @@ async function createEmployee(req, res) {
             message: 'Internal server error'
         });
     }
-}
-
-function generateTempPassword() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-    let password = '';
-    for (let i = 0; i < 12; i++) {
-        password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return password;
 }
 
 module.exports = createEmployee;

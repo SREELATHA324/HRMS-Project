@@ -26,22 +26,22 @@ async function updateEmployee(req, res) {
 
         const result = await pool.query(
             `UPDATE employees SET
-                "employeeCode" = $1,
-                "firstName" = $2,
-                "lastName" = $3,
-                phone = $4,
-                "dateOfBirth" = $5,
-                gender = $6,
-                address = $7,
-                city = $8,
-                state = $9,
-                country = $10,
-                pincode = $11,
-                "departmentId" = $12,
-                "designationId" = $13,
-                "reportingManagerId" = $14,
-                "employmentType" = $15,
-                status = $16,
+                "employeeCode" = COALESCE($1, "employeeCode"),
+                "firstName" = COALESCE($2, "firstName"),
+                "lastName" = COALESCE($3, "lastName"),
+                phone = COALESCE($4, phone),
+                "dateOfBirth" = COALESCE($5, "dateOfBirth"),
+                gender = COALESCE($6, gender),
+                address = COALESCE($7, address),
+                city = COALESCE($8, city),
+                state = COALESCE($9, state),
+                country = COALESCE($10, country),
+                pincode = COALESCE($11, pincode),
+                "departmentId" = COALESCE($12, "departmentId"),
+                "designationId" = COALESCE($13, "designationId"),
+                "reportingManagerId" = COALESCE($14, "reportingManagerId"),
+                "employmentType" = COALESCE($15, "employmentType"),
+                status = COALESCE($16, status),
                 updated_at = CURRENT_TIMESTAMP
              WHERE id = $17
              RETURNING *`,
@@ -57,7 +57,7 @@ async function updateEmployee(req, res) {
             [id, 'Updated', JSON.stringify(oldData), JSON.stringify(result.rows[0]), new Date(), 'Employee updated']
         );
 
-        if (oldData.status !== status) {
+        if (oldData.status !== status && status) {
             await pool.query(
                 `INSERT INTO employee_status_history ("employeeId", "oldStatus", "newStatus", "effectiveDate", reason)
                  VALUES ($1, $2, $3, $4, $5)`,

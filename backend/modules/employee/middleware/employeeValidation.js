@@ -1,8 +1,19 @@
 function validateEmployee(req, res, next) {
     const {
-        employeeCode, firstName, lastName, email,
+        employeeCode, firstName, email,
         departmentId, designationId, joiningDate
     } = req.body;
+
+    if (req.method === 'PUT') {
+        const hasUpdates = Object.keys(req.body).length > 0;
+        if (!hasUpdates) {
+            return res.status(400).json({
+                success: false,
+                message: 'No fields to update'
+            });
+        }
+        return next();
+    }
 
     const errors = [];
 
