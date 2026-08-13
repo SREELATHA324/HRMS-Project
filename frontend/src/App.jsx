@@ -11,6 +11,8 @@ import Dashboard from "./Dashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Employees from "./pages/admin/Employees";
 import AddEmployee from "./pages/admin/AddEmployee";
+import EmployeeDetails from "./pages/admin/EmployeeDetails";
+import EditEmployee from "./pages/admin/EditEmployee";
 function App() {
   const getPageFromHash = () => {
     const hash = window.location.hash;
@@ -23,14 +25,37 @@ function App() {
     if (hash === "#dashboard") return "dashboard";
     if (hash === "#admin/employees") return "employees";
     if (hash === "#admin/employees/add") return "addEmployee";
-
+    if (hash.startsWith("#admin/employees/view/")) {
+  return "employeeDetails";
+    if (hash.startsWith("#admin/employees/edit/")) {
+  return "editEmployee";
+}
+}
     return "landing";
   };
 
   const [page, setPage] = useState(getPageFromHash);
   const [email, setEmail] = useState("");
+  const getEmployeeIdFromHash = () => {
+  const prefix = "#admin/employees/view/";
 
-  const navigate = (pageName, replace = false) => {
+  if (!window.location.hash.startsWith(prefix)) {
+    return null;
+  }
+
+  return window.location.hash.substring(prefix.length);
+};
+const getEditEmployeeIdFromHash = () => {
+  const prefix = "#admin/employees/edit/";
+
+  if (!window.location.hash.startsWith(prefix)) {
+    return null;
+  }
+
+  return window.location.hash.substring(prefix.length);
+};
+
+  const navigate = (pageName, value=null, replace = false) => {
     const hashMap = {
       landing: "",
       login: "login",
@@ -41,7 +66,10 @@ function App() {
       dashboard: "dashboard",
       employees: "admin/employees",
       addEmployee: "admin/employees/add",
+      employeeDetails: `admin/employees/view/${value}`,
+      editEmployee: `admin/employees/edit/${value}`,
     };
+   
 
     const hash = hashMap[pageName];
 
@@ -164,6 +192,19 @@ function App() {
           onNavigate={navigate}
         />
       )}
+
+      {page === "employeeDetails" && (
+  <EmployeeDetails
+    employeeId={getEmployeeIdFromHash()}
+    onNavigate={navigate}
+  />
+)}
+{page === "editEmployee" && (
+  <EditEmployee
+    employeeId={getEditEmployeeIdFromHash()}
+    onNavigate={navigate}
+  />
+)}
     </>
   );
 }

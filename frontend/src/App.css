@@ -6703,3 +6703,444 @@
     width: 100%;
   }
 }
+/* =========================================
+   EMPLOYEE DETAILS PAGE
+========================================= */
+
+.employee-details-page {
+  max-width: 1200px;
+}
+
+/* Page Header */
+
+.employee-details-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.employee-details-page-header h1 {
+  margin: 0;
+  color: #172033;
+  font-size: 25px;
+  font-weight: 700;
+}
+
+.employee-details-page-header p {
+  margin: 6px 0 0;
+  color: #71819b;
+  font-size: 13px;
+}
+
+/* Back Button */
+
+.employee-details-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  margin-bottom: 11px;
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.employee-details-back:hover {
+  color: #5146a5;
+}
+
+/* =========================================
+   PROFILE CARD
+========================================= */
+
+.employee-profile-card {
+  margin-bottom: 18px;
+
+  background: #ffffff;
+  border: 1px solid #e4e9f0;
+  border-radius: 14px;
+
+  overflow: hidden;
+}
+
+.employee-profile-main {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+
+  padding: 26px 30px;
+
+  background: linear-gradient(
+    135deg,
+    #fafbff 0%,
+    #ffffff 100%
+  );
+}
+
+.employee-profile-avatar {
+  width: 70px;
+  height: 70px;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 14px;
+
+  background: #eeedff;
+  color: #5146a5;
+
+  font-size: 25px;
+  font-weight: 700;
+
+  border: 1px solid #dfddff;
+}
+
+.employee-profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.employee-profile-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 20px;
+}
+
+.employee-profile-title-row h2 {
+  margin: 0;
+
+  color: #172033;
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.employee-profile-role {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin: 5px 0 0;
+
+  color: #71819b;
+  font-size: 13px;
+}
+
+.employee-profile-role span {
+  color: #b0bac8;
+}
+
+.employee-profile-status {
+  flex-shrink: 0;
+}
+
+.employee-profile-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 20px;
+
+  margin-top: 13px;
+
+  color: #71819b;
+  font-size: 12px;
+}
+
+.employee-profile-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.employee-profile-meta svg {
+  color: #8a97aa;
+}
+
+.employee-profile-meta strong {
+  color: #46556d;
+  font-weight: 600;
+}
+
+/* =========================================
+   INFORMATION CARDS
+========================================= */
+
+.employee-information-card {
+  margin-bottom: 18px;
+
+  padding: 26px 30px;
+
+  background: #ffffff;
+
+  border: 1px solid #e4e9f0;
+  border-radius: 14px;
+}
+
+.employee-information-card:last-child {
+  margin-bottom: 0;
+}
+
+/* Section Header */
+
+.employee-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  margin-bottom: 24px;
+}
+
+.employee-section-icon {
+  width: 35px;
+  height: 35px;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 9px;
+
+  background: #f0efff;
+  color: #5146a5;
+}
+
+.employee-section-header h3 {
+  margin: 0;
+
+  color: #26354d;
+
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.employee-section-header p {
+  margin: 3px 0 0;
+
+  color: #8a97aa;
+
+  font-size: 12px;
+}
+
+/* =========================================
+   DETAILS GRID
+========================================= */
+
+.employee-details-grid {
+  display: grid;
+
+  grid-template-columns: repeat(
+    3,
+    minmax(0, 1fr)
+  );
+
+  gap: 22px 30px;
+}
+
+.employee-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+
+  min-width: 0;
+}
+
+.employee-detail-item span {
+  color: #8a97aa;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  text-transform: uppercase;
+  letter-spacing: 0.045em;
+}
+
+.employee-detail-item strong {
+  color: #26354d;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  line-height: 1.5;
+
+  word-break: break-word;
+}
+
+.employee-detail-full {
+  grid-column: 1 / -1;
+}
+
+/* =========================================
+   LOADING
+========================================= */
+
+.employee-details-loading {
+  min-height: 420px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 14px;
+
+  color: #71819b;
+}
+
+.employee-details-loading p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.employee-loading-spinner {
+  width: 30px;
+  height: 30px;
+
+  border: 3px solid #e5e7eb;
+  border-top-color: #5146a5;
+
+  border-radius: 50%;
+
+  animation: employee-details-spin 0.8s linear infinite;
+}
+
+@keyframes employee-details-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================
+   ERROR
+========================================= */
+
+.employee-details-error {
+  min-height: 420px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 40px;
+
+  text-align: center;
+
+  background: #ffffff;
+
+  border: 1px solid #e4e9f0;
+  border-radius: 14px;
+}
+
+.employee-error-icon {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 14px;
+
+  border-radius: 50%;
+
+  background: #fef2f2;
+  color: #dc2626;
+
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.employee-details-error h2 {
+  margin: 0 0 7px;
+
+  color: #26354d;
+  font-size: 18px;
+}
+
+.employee-details-error p {
+  max-width: 450px;
+
+  margin: 0 0 20px;
+
+  color: #71819b;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 900px) {
+  .employee-details-grid {
+    grid-template-columns: repeat(
+      2,
+      minmax(0, 1fr)
+    );
+  }
+}
+
+@media (max-width: 640px) {
+  .employee-profile-main {
+    align-items: flex-start;
+
+    padding: 22px;
+  }
+
+  .employee-profile-title-row {
+    flex-direction: column;
+
+    gap: 10px;
+  }
+
+  .employee-profile-meta {
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 8px;
+  }
+
+  .employee-information-card {
+    padding: 22px;
+  }
+
+  .employee-details-grid {
+    grid-template-columns: 1fr;
+
+    gap: 18px;
+  }
+
+  .employee-detail-full {
+    grid-column: auto;
+  }
+}
+.admin-field-note {
+  display: block;
+  margin-top: 5px;
+
+  color: #8a97aa;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.admin-form-group input:disabled,
+.admin-form-group select:disabled {
+  background: #f8fafc;
+  color: #7b8798;
+  cursor: not-allowed;
+}

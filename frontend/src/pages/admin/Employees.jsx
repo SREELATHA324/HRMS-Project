@@ -66,7 +66,7 @@ function Employees({ onNavigate }) {
 
   const handleViewEmployee = (id) => {
     if (onNavigate) {
-      onNavigate("viewEmployee", id);
+      onNavigate("employeeDetails", id);
     } else {
       console.log("View employee:", id);
     }
