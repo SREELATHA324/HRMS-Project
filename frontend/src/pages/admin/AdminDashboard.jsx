@@ -5,6 +5,9 @@ import {
   UserX,
   Building2,
   CalendarDays,
+  Pencil,
+  UserPlus,
+  UserCog,
 } from "lucide-react";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminHeader from "../../components/admin/AdminHeader";
@@ -18,6 +21,7 @@ function AdminDashboard({ onNavigate, onLogout }) {
     inactiveEmployees: 0,
     departments: 0,
     recentEmployees: [],
+    recentActivities: [],
     departmentStats: [],
   });
   const [loading, setLoading] = useState(true);
@@ -45,30 +49,31 @@ function AdminDashboard({ onNavigate, onLogout }) {
     }
   };
 
-  const recentActivities = dashboardData.recentEmployees.map((emp, index) => ({
-    id: index + 1,
-    type: "employee",
-    title: "New employee added",
-    description: `${emp.firstName} ${emp.lastName} joined the organization`,
-    time: new Date(emp.joiningDate).toLocaleDateString(),
-  }));
+  const getActivityIcon = (type) => {
+    if (type === "new_employee") return <UserPlus size={16} />;
+    if (type === "status_change") return <UserCog size={16} />;
+    if (type === "employee_update") return <Pencil size={16} />;
+    return <Building2 size={16} />;
+  };
 
-  const handleViewAllActivities = () => {
-    if (onNavigate) {
-      onNavigate("activities");
-    } else {
-      console.log("View all activities");
-    }
+  const getActivityColor = (type) => {
+    if (type === "new_employee") return "employee";
+    if (type === "status_change") return "leave";
+    if (type === "employee_update") return "department";
+    return "department";
+  };
+
+  const getActivityTitle = (type) => {
+    if (type === "new_employee") return "New employee added";
+    if (type === "status_change") return "Status changed";
+    if (type === "employee_update") return "Employee updated";
+    return "Activity";
   };
 
   if (loading) {
     return (
       <div className="admin-layout">
-        <AdminSidebar
-          onNavigate={onNavigate}
-          onLogout={onLogout}
-          activePage="dashboard"
-        />
+        <AdminSidebar onNavigate={onNavigate} onLogout={onLogout} activePage="dashboard" />
         <main className="admin-main">
           <AdminHeader />
           <div className="admin-dashboard-content">
@@ -96,14 +101,12 @@ function AdminDashboard({ onNavigate, onLogout }) {
               title="Total Employees"
               value={dashboardData.totalEmployees}
               description="Employees in organization"
-              trend="+5 this month"
               icon={<Users size={20} />}
             />
             <StatCard
               title="Active Employees"
               value={dashboardData.activeEmployees}
               description="Currently active"
-              trend="+3.2%"
               icon={<UserCheck size={20} />}
             />
             <StatCard
@@ -341,35 +344,28 @@ function AdminDashboard({ onNavigate, onLogout }) {
               <button
                 type="button"
                 className="admin-panel-link"
-                onClick={handleViewAllActivities}
+                onClick={() => {
+                  if (onNavigate) {
+                    onNavigate("activities");
+                  }
+                }}
               >
                 View All
               </button>
             </div>
             <div className="recent-activities-list">
-              {recentActivities.length > 0 ? (
-                recentActivities.map((activity) => (
-                  <div
-                    className="recent-activity-item"
-                    key={activity.id}
-                  >
+              {dashboardData.recentActivities && dashboardData.recentActivities.length > 0 ? (
+                dashboardData.recentActivities.map((activity, index) => (
+                  <div className="recent-activity-item" key={index}>
                     <div
-                      className={`recent-activity-icon ${activity.type}`}
+                      className={`recent-activity-icon ${getActivityColor(activity.type)}`}
                     >
-                      {activity.type === "employee" && (
-                        <Users size={16} />
-                      )}
-                      {activity.type === "leave" && (
-                        <CalendarDays size={16} />
-                      )}
-                      {activity.type === "department" && (
-                        <Building2 size={16} />
-                      )}
+                      {getActivityIcon(activity.type)}
                     </div>
                     <div className="recent-activity-content">
-                      <strong>{activity.title}</strong>
+                      <strong>{getActivityTitle(activity.type)}</strong>
                       <span>{activity.description}</span>
-                      <small>{activity.time}</small>
+                      <small>{new Date(activity.activity_date).toLocaleString()}</small>
                     </div>
                   </div>
                 ))
