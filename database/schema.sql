@@ -95,6 +95,145 @@ CREATE TABLE security_history (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE departments (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT,
+    head_id BIGINT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE designations (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE employees (
+    id BIGSERIAL PRIMARY KEY,
+    "userId" BIGINT UNIQUE REFERENCES users(id) ON DELETE SET NULL,
+    "employeeCode" VARCHAR(50) NOT NULL UNIQUE,
+    "firstName" VARCHAR(100) NOT NULL,
+    "lastName" VARCHAR(100),
+    email VARCHAR(150) NOT NULL UNIQUE,
+    phone VARCHAR(30),
+    "dateOfBirth" DATE,
+    gender VARCHAR(30),
+    address TEXT,
+    city VARCHAR(100),
+    state VARCHAR(100),
+    country VARCHAR(100),
+    pincode VARCHAR(20),
+    "departmentId" BIGINT REFERENCES departments(id) ON DELETE SET NULL,
+    "designationId" BIGINT REFERENCES designations(id) ON DELETE SET NULL,
+    "reportingManagerId" BIGINT REFERENCES employees(id) ON DELETE SET NULL,
+    "joiningDate" DATE NOT NULL,
+    "employmentType" VARCHAR(50),
+    status VARCHAR(30) NOT NULL DEFAULT 'Active',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE departments
+ADD CONSTRAINT fk_department_head
+FOREIGN KEY (head_id)
+REFERENCES employees(id)
+ON DELETE SET NULL;
+
+CREATE TABLE employee_emergency_contacts (
+    id BIGSERIAL PRIMARY KEY,
+    "employeeId" BIGINT NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+    "contactName" VARCHAR(150) NOT NULL,
+    relationship VARCHAR(100),
+    phone VARCHAR(30) NOT NULL,
+    "alternatePhone" VARCHAR(30),
+    email VARCHAR(150),
+    address TEXT,
+    "isPrimary" BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE employee_bank_accounts (
+    id BIGSERIAL PRIMARY KEY,
+    "employeeId" BIGINT NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+    "accountHolderName" VARCHAR(150) NOT NULL,
+    "bankName" VARCHAR(150) NOT NULL,
+    "accountNumber" VARCHAR(100) NOT NULL,
+    "ifscCode" VARCHAR(30),
+    "accountType" VARCHAR(30),
+    "isPrimary" BOOLEAN NOT NULL DEFAULT FALSE,
+    "isVerified" BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE employee_history (
+    id BIGSERIAL PRIMARY KEY,
+    "employeeId" BIGINT NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+    "changeType" VARCHAR(100) NOT NULL,
+    "oldValue" TEXT,
+    "newValue" TEXT,
+    "effectiveDate" DATE NOT NULL,
+    remarks TEXT,
+    "changedBy" BIGINT REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE employee_status_history (
+    id BIGSERIAL PRIMARY KEY,
+    "employeeId" BIGINT NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+    "oldStatus" VARCHAR(30),
+    "newStatus" VARCHAR(30) NOT NULL,
+    "effectiveDate" DATE NOT NULL,
+    reason TEXT,
+    "changedBy" BIGINT REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE branches (
+    id BIGSERIAL PRIMARY KEY,
+    company_id BIGINT,
+    name VARCHAR(100) NOT NULL,
+    address TEXT,
+    city VARCHAR(100),
+    state VARCHAR(100),
+    country VARCHAR(100),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_employees_userId
+ON employees("userId");
+
+CREATE INDEX idx_employees_departmentId
+ON employees("departmentId");
+
+CREATE INDEX idx_employees_designationId
+ON employees("designationId");
+
+CREATE INDEX idx_employees_reportingManagerId
+ON employees("reportingManagerId");
+
+CREATE INDEX idx_employee_emergency_contacts_employeeId
+ON employee_emergency_contacts("employeeId");
+
+CREATE INDEX idx_employee_bank_accounts_employeeId
+ON employee_bank_accounts("employeeId");
+
+CREATE INDEX idx_employee_history_employeeId
+ON employee_history("employeeId");
+
+CREATE INDEX idx_employee_status_history_employeeId
+ON employee_status_history("employeeId");
+
+CREATE INDEX idx_branches_company_id
+ON branches(company_id);
+
 CREATE INDEX idx_users_role_id ON users(role_id);
 CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id);
 CREATE INDEX idx_user_sessions_expires_at ON user_sessions(expires_at);
