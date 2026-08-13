@@ -94,14 +94,7 @@ function Navbar({ onLogin }) {
             Login
           </button>
 
-          <button
-            type="button"
-            className="navbar-start"
-            onClick={onLogin}
-          >
-            Register
-          </button>
-
+          
         </div>
 
         {/* Mobile Menu Button */}
@@ -178,17 +171,7 @@ function Navbar({ onLogin }) {
               Login
             </button>
 
-            <button
-              type="button"
-              className="navbar-mobile-start"
-              onClick={() => {
-                closeMenu();
-                onLogin();
-              }}
-            >
-              Register
-            </button>
-
+            
           </div>
 
         </div>
