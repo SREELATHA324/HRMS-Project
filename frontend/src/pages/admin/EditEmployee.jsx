@@ -21,6 +21,8 @@ function EditEmployee({ employeeId, onNavigate }) {
     reportingManagerId: "",
     joiningDate: "",
     employmentType: "Full-time",
+    role: "employee",
+    jobLocation: "onsite",
     status: "Active",
   });
 
@@ -56,11 +58,11 @@ function EditEmployee({ employeeId, onNavigate }) {
         }
 
         if (deptRes.success) {
-          setDepartments(deptRes.data);
+          setDepartments(deptRes.data || []);
         }
 
         if (desigRes.success) {
-          setDesignations(desigRes.data);
+          setDesignations(desigRes.data || []);
         }
 
         const employee = employeeRes.data;
@@ -71,9 +73,11 @@ function EditEmployee({ employeeId, onNavigate }) {
           lastName: employee.lastName || "",
           email: employee.email || "",
           phone: employee.phone || "",
+
           dateOfBirth: formatDateForInput(
             employee.dateOfBirth
           ),
+
           gender: employee.gender || "",
           address: employee.address || "",
           city: employee.city || "",
@@ -103,7 +107,14 @@ function EditEmployee({ employeeId, onNavigate }) {
           employmentType:
             employee.employmentType || "Full-time",
 
-          status: employee.status || "Active",
+          role:
+            employee.role || "employee",
+
+          jobLocation:
+            employee.jobLocation || "onsite",
+
+          status:
+            employee.status || "Active",
         });
       } catch (err) {
         console.error(
@@ -164,11 +175,16 @@ function EditEmployee({ employeeId, onNavigate }) {
     try {
       const employeeData = {
         employeeCode: formData.employeeCode,
+
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone,
-        dateOfBirth: formData.dateOfBirth || null,
-        gender: formData.gender || null,
+
+        dateOfBirth:
+          formData.dateOfBirth || null,
+
+        gender:
+          formData.gender || null,
 
         address: formData.address,
         city: formData.city,
@@ -194,7 +210,14 @@ function EditEmployee({ employeeId, onNavigate }) {
         employmentType:
           formData.employmentType,
 
-        status: formData.status,
+        role:
+          formData.role,
+
+        jobLocation:
+          formData.jobLocation,
+
+        status:
+          formData.status,
       };
 
       const response = await api.put(
@@ -210,9 +233,13 @@ function EditEmployee({ employeeId, onNavigate }) {
         return;
       }
 
-      // Replace the edit page in history.
+      // Replace edit page in history
       if (onNavigate) {
-        onNavigate("employees", null, true);
+        onNavigate(
+          "employees",
+          null,
+          true
+        );
       }
     } catch (err) {
       console.error(
@@ -280,6 +307,7 @@ function EditEmployee({ employeeId, onNavigate }) {
 
       <div className="admin-page-header">
         <div>
+
           <button
             type="button"
             className="admin-back-button"
@@ -292,9 +320,10 @@ function EditEmployee({ employeeId, onNavigate }) {
           <h1>Edit Employee</h1>
 
           <p>
-            Update the employee's organization
-            information.
+            Update the employee's personal and
+            organization information.
           </p>
+
         </div>
       </div>
 
@@ -309,21 +338,29 @@ function EditEmployee({ employeeId, onNavigate }) {
         onSubmit={handleSubmit}
       >
 
-        {/* Personal Details */}
+        {/* --------------------------------
+            Personal Details
+        -------------------------------- */}
 
         <section className="admin-form-section">
+
           <div className="admin-form-section-header">
+
             <h2>Personal Details</h2>
 
             <p>
               Update the employee's personal
               information.
             </p>
+
           </div>
 
           <div className="admin-form-grid">
 
+            {/* First Name */}
+
             <div className="admin-form-group">
+
               <label htmlFor="firstName">
                 First Name <span>*</span>
               </label>
@@ -336,9 +373,13 @@ function EditEmployee({ employeeId, onNavigate }) {
                 onChange={handleChange}
                 required
               />
+
             </div>
 
+            {/* Last Name */}
+
             <div className="admin-form-group">
+
               <label htmlFor="lastName">
                 Last Name
               </label>
@@ -350,9 +391,13 @@ function EditEmployee({ employeeId, onNavigate }) {
                 value={formData.lastName}
                 onChange={handleChange}
               />
+
             </div>
 
+            {/* Email */}
+
             <div className="admin-form-group">
+
               <label htmlFor="email">
                 Email
               </label>
@@ -370,9 +415,13 @@ function EditEmployee({ employeeId, onNavigate }) {
                 Email cannot be changed from this
                 form.
               </small>
+
             </div>
 
+            {/* Phone */}
+
             <div className="admin-form-group">
+
               <label htmlFor="phone">
                 Phone
               </label>
@@ -384,9 +433,13 @@ function EditEmployee({ employeeId, onNavigate }) {
                 value={formData.phone}
                 onChange={handleChange}
               />
+
             </div>
 
+            {/* Date of Birth */}
+
             <div className="admin-form-group">
+
               <label htmlFor="dateOfBirth">
                 Date of Birth
               </label>
@@ -398,9 +451,13 @@ function EditEmployee({ employeeId, onNavigate }) {
                 value={formData.dateOfBirth}
                 onChange={handleChange}
               />
+
             </div>
 
+            {/* Gender */}
+
             <div className="admin-form-group">
+
               <label htmlFor="gender">
                 Gender
               </label>
@@ -411,6 +468,7 @@ function EditEmployee({ employeeId, onNavigate }) {
                 value={formData.gender}
                 onChange={handleChange}
               >
+
                 <option value="">
                   Select gender
                 </option>
@@ -426,10 +484,15 @@ function EditEmployee({ employeeId, onNavigate }) {
                 <option value="Other">
                   Other
                 </option>
+
               </select>
+
             </div>
 
+            {/* Address */}
+
             <div className="admin-form-group full-width">
+
               <label htmlFor="address">
                 Address
               </label>
@@ -441,9 +504,13 @@ function EditEmployee({ employeeId, onNavigate }) {
                 onChange={handleChange}
                 rows="3"
               />
+
             </div>
 
+            {/* City */}
+
             <div className="admin-form-group">
+
               <label htmlFor="city">
                 City
               </label>
@@ -454,9 +521,13 @@ function EditEmployee({ employeeId, onNavigate }) {
                 value={formData.city}
                 onChange={handleChange}
               />
+
             </div>
 
+            {/* State */}
+
             <div className="admin-form-group">
+
               <label htmlFor="state">
                 State
               </label>
@@ -467,9 +538,13 @@ function EditEmployee({ employeeId, onNavigate }) {
                 value={formData.state}
                 onChange={handleChange}
               />
+
             </div>
 
+            {/* Country */}
+
             <div className="admin-form-group">
+
               <label htmlFor="country">
                 Country
               </label>
@@ -480,9 +555,13 @@ function EditEmployee({ employeeId, onNavigate }) {
                 value={formData.country}
                 onChange={handleChange}
               />
+
             </div>
 
+            {/* Pincode */}
+
             <div className="admin-form-group">
+
               <label htmlFor="pincode">
                 Pincode
               </label>
@@ -493,27 +572,36 @@ function EditEmployee({ employeeId, onNavigate }) {
                 value={formData.pincode}
                 onChange={handleChange}
               />
+
             </div>
 
           </div>
+
         </section>
 
-        {/* Employment Details */}
+        {/* --------------------------------
+            Employment Details
+        -------------------------------- */}
 
         <section className="admin-form-section">
 
           <div className="admin-form-section-header">
+
             <h2>Employment Details</h2>
 
             <p>
               Update the employee's organization
               information.
             </p>
+
           </div>
 
           <div className="admin-form-grid">
 
+            {/* Employee Code */}
+
             <div className="admin-form-group">
+
               <label htmlFor="employeeCode">
                 Employee Code <span>*</span>
               </label>
@@ -526,9 +614,13 @@ function EditEmployee({ employeeId, onNavigate }) {
                 onChange={handleChange}
                 required
               />
+
             </div>
 
+            {/* Department */}
+
             <div className="admin-form-group">
+
               <label htmlFor="departmentId">
                 Department <span>*</span>
               </label>
@@ -540,6 +632,7 @@ function EditEmployee({ employeeId, onNavigate }) {
                 onChange={handleChange}
                 required
               >
+
                 <option value="">
                   Select department
                 </option>
@@ -552,10 +645,15 @@ function EditEmployee({ employeeId, onNavigate }) {
                     {dept.name}
                   </option>
                 ))}
+
               </select>
+
             </div>
 
+            {/* Designation */}
+
             <div className="admin-form-group">
+
               <label htmlFor="designationId">
                 Designation <span>*</span>
               </label>
@@ -567,6 +665,7 @@ function EditEmployee({ employeeId, onNavigate }) {
                 onChange={handleChange}
                 required
               >
+
                 <option value="">
                   Select designation
                 </option>
@@ -579,27 +678,39 @@ function EditEmployee({ employeeId, onNavigate }) {
                     {desig.name}
                   </option>
                 ))}
+
               </select>
+
             </div>
 
+            {/* Reporting Manager */}
+
             <div className="admin-form-group">
+
               <label htmlFor="reportingManagerId">
                 Reporting Manager
               </label>
 
-              <select
+              <input
                 id="reportingManagerId"
                 name="reportingManagerId"
+                type="number"
+                placeholder="Enter reporting manager ID"
                 value={formData.reportingManagerId}
                 onChange={handleChange}
-              >
-                <option value="">
-                  Select reporting manager
-                </option>
-              </select>
+              />
+
+              <small className="admin-field-note">
+                Enter the employee ID of the reporting
+                manager.
+              </small>
+
             </div>
 
+            {/* Joining Date */}
+
             <div className="admin-form-group">
+
               <label htmlFor="joiningDate">
                 Joining Date
               </label>
@@ -617,9 +728,13 @@ function EditEmployee({ employeeId, onNavigate }) {
                 Joining date cannot be changed from
                 this form.
               </small>
+
             </div>
 
+            {/* Employment Type */}
+
             <div className="admin-form-group">
+
               <label htmlFor="employmentType">
                 Employment Type <span>*</span>
               </label>
@@ -631,6 +746,7 @@ function EditEmployee({ employeeId, onNavigate }) {
                 onChange={handleChange}
                 required
               >
+
                 <option value="Full-time">
                   Full-time
                 </option>
@@ -646,10 +762,79 @@ function EditEmployee({ employeeId, onNavigate }) {
                 <option value="Intern">
                   Intern
                 </option>
+
               </select>
+
             </div>
 
+            {/* Role */}
+
             <div className="admin-form-group">
+
+              <label htmlFor="role">
+                Role <span>*</span>
+              </label>
+
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                required
+              >
+
+                <option value="employee">
+                  Employee
+                </option>
+
+                <option value="manager">
+                  Manager
+                </option>
+
+                <option value="admin">
+                  Admin
+                </option>
+
+              </select>
+
+            </div>
+
+            {/* Job Location */}
+
+            <div className="admin-form-group">
+
+              <label htmlFor="jobLocation">
+                Job Location <span>*</span>
+              </label>
+
+              <select
+                id="jobLocation"
+                name="jobLocation"
+                value={formData.jobLocation}
+                onChange={handleChange}
+                required
+              >
+
+                <option value="remote">
+                  Remote
+                </option>
+
+                <option value="hybrid">
+                  Hybrid
+                </option>
+
+                <option value="onsite">
+                  Onsite
+                </option>
+
+              </select>
+
+            </div>
+
+            {/* Status */}
+
+            <div className="admin-form-group">
+
               <label htmlFor="status">
                 Status
               </label>
@@ -660,6 +845,7 @@ function EditEmployee({ employeeId, onNavigate }) {
                 value={formData.status}
                 onChange={handleChange}
               >
+
                 <option value="Active">
                   Active
                 </option>
@@ -667,10 +853,13 @@ function EditEmployee({ employeeId, onNavigate }) {
                 <option value="Inactive">
                   Inactive
                 </option>
+
               </select>
+
             </div>
 
           </div>
+
         </section>
 
         {/* Actions */}
@@ -699,6 +888,7 @@ function EditEmployee({ employeeId, onNavigate }) {
         </div>
 
       </form>
+
     </div>
   );
 }
@@ -717,9 +907,11 @@ function formatDateForInput(date) {
   }
 
   const year = parsedDate.getFullYear();
+
   const month = String(
     parsedDate.getMonth() + 1
   ).padStart(2, "0");
+
   const day = String(
     parsedDate.getDate()
   ).padStart(2, "0");

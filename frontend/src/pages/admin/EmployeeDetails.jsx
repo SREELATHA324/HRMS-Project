@@ -4,7 +4,6 @@ import {
   User,
   Mail,
   Phone,
-  CalendarDays,
   MapPin,
   Briefcase,
 } from "lucide-react";
@@ -21,18 +20,22 @@ function EmployeeDetails({ employeeId, onNavigate }) {
         setLoading(true);
         setError("");
 
-        const response = await api.get(`/employees/${employeeId}`);
+        const response = await api.get(
+          `/employees/${employeeId}`
+        );
 
         if (response.success) {
           setEmployee(response.data);
         } else {
           setError(
-            response.message || "Failed to load employee details."
+            response.message ||
+              "Failed to load employee details."
           );
         }
       } catch (err) {
         setError(
-          err.message || "Failed to load employee details."
+          err.message ||
+            "Failed to load employee details."
         );
       } finally {
         setLoading(false);
@@ -129,7 +132,6 @@ function EmployeeDetails({ employeeId, onNavigate }) {
 
       {/* Page Header */}
       <div className="employee-details-page-header">
-
         <div>
           <button
             type="button"
@@ -149,12 +151,10 @@ function EmployeeDetails({ employeeId, onNavigate }) {
             organization details.
           </p>
         </div>
-
       </div>
 
       {/* Employee Profile Card */}
       <div className="employee-profile-card">
-
         <div className="employee-profile-main">
 
           <div className="employee-profile-avatar">
@@ -216,7 +216,6 @@ function EmployeeDetails({ employeeId, onNavigate }) {
 
           </div>
         </div>
-
       </div>
 
       {/* Personal Information */}
@@ -231,7 +230,7 @@ function EmployeeDetails({ employeeId, onNavigate }) {
         <div className="employee-details-grid">
 
           <DetailItem
-            label="Employee Code"
+            label="Employee ID"
             value={employee.employeeCode}
           />
 
@@ -266,7 +265,6 @@ function EmployeeDetails({ employeeId, onNavigate }) {
           />
 
         </div>
-
       </div>
 
       {/* Employment Information */}
@@ -288,6 +286,18 @@ function EmployeeDetails({ employeeId, onNavigate }) {
           <DetailItem
             label="Designation"
             value={employee.designation_name}
+          />
+
+          <DetailItem
+            label="Role"
+            value={formatRole(employee.role)}
+          />
+
+          <DetailItem
+            label="Job Location"
+            value={formatJobLocation(
+              employee.jobLocation
+            )}
           />
 
           <DetailItem
@@ -313,8 +323,12 @@ function EmployeeDetails({ employeeId, onNavigate }) {
             value={employee.status}
           />
 
-        </div>
+          <DetailItem
+            label="Length of Service"
+            value={employee.lengthOfService}
+          />
 
+        </div>
       </div>
 
       {/* Address Information */}
@@ -330,6 +344,7 @@ function EmployeeDetails({ employeeId, onNavigate }) {
 
           <div className="employee-detail-item employee-detail-full">
             <span>Address</span>
+
             <strong>
               {employee.address || "—"}
             </strong>
@@ -356,7 +371,6 @@ function EmployeeDetails({ employeeId, onNavigate }) {
           />
 
         </div>
-
       </div>
 
     </div>
@@ -397,6 +411,38 @@ function DetailItem({ label, value }) {
       </strong>
 
     </div>
+  );
+}
+
+/* Role Formatter */
+function formatRole(role) {
+  if (!role) return "—";
+
+  const roles = {
+    employee: "Employee",
+    manager: "Manager",
+    admin: "Admin",
+  };
+
+  return (
+    roles[String(role).toLowerCase()] ||
+    role
+  );
+}
+
+/* Job Location Formatter */
+function formatJobLocation(location) {
+  if (!location) return "—";
+
+  const locations = {
+    remote: "Remote",
+    hybrid: "Hybrid",
+    onsite: "Onsite",
+  };
+
+  return (
+    locations[String(location).toLowerCase()] ||
+    location
   );
 }
 

@@ -4,7 +4,7 @@ import { api } from "../../services/api";
 
 function AddEmployee({ onNavigate }) {
   const [formData, setFormData] = useState({
-    employeeID: "",
+    employeeCode: "",
     firstName: "",
     lastName: "",
     email: "",
@@ -300,10 +300,10 @@ function AddEmployee({ onNavigate }) {
                 Employee ID <span>*</span>
               </label>
               <input
-                id="employeeID"
-                name="employeeID"
+                id="employeeCode"
+                name="employeeCode"
                 type="text"
-                value={formData.employeeID}
+                value={formData.employeeCode}
                 onChange={handleChange}
                 placeholder="EMP004"
                 required
@@ -408,9 +408,9 @@ function AddEmployee({ onNavigate }) {
                   onChange={handleChange}
                   required
                 >
-                  <option value="Employee">Employee</option>
-                  <option value="Manager">Manager</option>
-                  <option value="Admin">Admin</option>
+                  <option value="employee">Employee</option>
+                  <option value="manager">Manager</option>
+                  <option value="admin">Admin</option>
                 </select>
               </div>
 
@@ -426,9 +426,10 @@ function AddEmployee({ onNavigate }) {
                 onChange={handleChange}
                 required
               >
-                <option value="Remote">Remote</option>
-                <option value="Hybrid">Hybrid</option>
-                <option value="Onsite">Onsite</option>
+                <option value="onsite">Onsite</option>
+                <option value="remote">Remote</option>
+                <option value="hybrid">Hybrid</option>
+                
               </select>
             </div> 
 
