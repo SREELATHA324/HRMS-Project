@@ -6,7 +6,7 @@ async function updateEmployee(req, res) {
         employeeCode, firstName, lastName, phone, dateOfBirth, gender,
         address, city, state, country, pincode,
         departmentId, designationId, reportingManagerId,
-        employmentType, status
+        employmentType, status, role, jobLocation
     } = req.body;
 
     try {
@@ -42,13 +42,15 @@ async function updateEmployee(req, res) {
                 "reportingManagerId" = COALESCE($14, "reportingManagerId"),
                 "employmentType" = COALESCE($15, "employmentType"),
                 status = COALESCE($16, status),
+                role = COALESCE($17, role),
+                "jobLocation" = COALESCE($18, "jobLocation"),
                 updated_at = CURRENT_TIMESTAMP
-             WHERE id = $17
+             WHERE id = $19
              RETURNING *`,
             [employeeCode, firstName, lastName, phone, dateOfBirth, gender,
              address, city, state, country, pincode,
              departmentId, designationId, reportingManagerId,
-             employmentType, status, id]
+             employmentType, status, role, jobLocation, id]
         );
 
         await pool.query(
