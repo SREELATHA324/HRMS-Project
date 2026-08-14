@@ -20,7 +20,9 @@ function AddEmployee({ onNavigate }) {
     designationId: "",
     reportingManagerId: "",
     joiningDate: "",
-    employmentType: "Full-time",
+    employmentType: "",
+    role: "",
+    jobLocation: "",
     status: "Active",
   });
 
@@ -294,8 +296,8 @@ function AddEmployee({ onNavigate }) {
 
           <div className="admin-form-grid">
             <div className="admin-form-group">
-              <label htmlFor="employeeCode">
-                Employee Code <span>*</span>
+              <label htmlFor="employeeID">
+                Employee ID <span>*</span>
               </label>
               <input
                 id="employeeCode"
@@ -352,15 +354,16 @@ function AddEmployee({ onNavigate }) {
               <label htmlFor="reportingManagerId">
                 Reporting Manager
               </label>
-              <select
-                id="reportingManagerId"
-                name="reportingManagerId"
-                value={formData.reportingManagerId}
-                onChange={handleChange}
-              >
-                <option value="">Select reporting manager</option>
-              </select>
-            </div>
+                <input
+                  id="reportingManagerId"
+                  name="reportingManagerId"
+                  type="number"
+                  placeholder="Enter reporting manager ID"
+                  value={formData.reportingManagerId}
+                  onChange={handleChange}
+                />
+
+                </div>
 
             <div className="admin-form-group">
               <label htmlFor="joiningDate">
@@ -393,6 +396,42 @@ function AddEmployee({ onNavigate }) {
                 <option value="Intern">Intern</option>
               </select>
             </div>
+            <div className="admin-form-group">
+                <label htmlFor="role">
+                  Role <span>*</span>
+                </label>
+
+                <select
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="employee">Employee</option>
+                  <option value="manager">Manager</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
+             <div className="admin-form-group">
+              <label htmlFor="jobLocation">
+                Job Location <span>*</span>
+              </label>
+
+              <select
+                id="jobLocation"
+                name="jobLocation"
+                value={formData.jobLocation}
+                onChange={handleChange}
+                required
+              >
+                <option value="onsite">Onsite</option>
+                <option value="remote">Remote</option>
+                <option value="hybrid">Hybrid</option>
+                
+              </select>
+            </div> 
 
             <div className="admin-form-group">
               <label htmlFor="status">
