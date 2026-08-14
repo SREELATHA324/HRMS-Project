@@ -16,7 +16,7 @@ async function createEmployee(req, res) {
         employeeCode, firstName, lastName, email, phone,
         dateOfBirth, gender, address, city, state, country,
         pincode, departmentId, designationId, reportingManagerId,
-        joiningDate, employmentType, status
+        joiningDate, employmentType, status, role, jobLocation
     } = req.body;
 
     try {
@@ -62,15 +62,16 @@ async function createEmployee(req, res) {
                 "userId", "employeeCode", "firstName", "lastName", email, phone,
                 "dateOfBirth", gender, address, city, state, country,
                 pincode, "departmentId", "designationId", "reportingManagerId",
-                "joiningDate", "employmentType", status
+                "joiningDate", "employmentType", status, role, "jobLocation"
             ) VALUES ($1, $2, $3, $4, $5, $6, 
                       $7, $8, $9, $10, $11, $12,
-                      $13, $14, $15, $16, $17, $18, $19)
+                      $13, $14, $15, $16, $17, $18, $19, $20, $21)
              RETURNING *`,
             [userId, employeeCode, firstName, lastName, email, phone,
              dateOfBirth || null, gender, address, city, state, country,
              pincode, departmentId, designationId, reportingManagerId,
-             joiningDate || null, employmentType, status || 'Active']
+             joiningDate || null, employmentType, status || 'Active',
+             role || 'employee', jobLocation || 'onsite']
         );
 
         await pool.query(
