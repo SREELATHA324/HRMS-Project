@@ -4,7 +4,7 @@ import { api } from "../../services/api";
 
 function AddEmployee({ onNavigate }) {
   const [formData, setFormData] = useState({
-    employeeCode: "",
+    employeeID: "",
     firstName: "",
     lastName: "",
     email: "",
@@ -20,7 +20,9 @@ function AddEmployee({ onNavigate }) {
     designationId: "",
     reportingManagerId: "",
     joiningDate: "",
-    employmentType: "Full-time",
+    employmentType: "",
+    role: "",
+    jobLocation: "",
     status: "Active",
   });
 
@@ -294,14 +296,14 @@ function AddEmployee({ onNavigate }) {
 
           <div className="admin-form-grid">
             <div className="admin-form-group">
-              <label htmlFor="employeeCode">
-                Employee Code <span>*</span>
+              <label htmlFor="employeeID">
+                Employee ID <span>*</span>
               </label>
               <input
-                id="employeeCode"
-                name="employeeCode"
+                id="employeeID"
+                name="employeeID"
                 type="text"
-                value={formData.employeeCode}
+                value={formData.employeeID}
                 onChange={handleChange}
                 placeholder="EMP004"
                 required
@@ -352,15 +354,16 @@ function AddEmployee({ onNavigate }) {
               <label htmlFor="reportingManagerId">
                 Reporting Manager
               </label>
-              <select
-                id="reportingManagerId"
-                name="reportingManagerId"
-                value={formData.reportingManagerId}
-                onChange={handleChange}
-              >
-                <option value="">Select reporting manager</option>
-              </select>
-            </div>
+                <input
+                  id="reportingManagerId"
+                  name="reportingManagerId"
+                  type="number"
+                  placeholder="Enter reporting manager ID"
+                  value={formData.reportingManagerId}
+                  onChange={handleChange}
+                />
+
+                </div>
 
             <div className="admin-form-group">
               <label htmlFor="joiningDate">
@@ -393,6 +396,41 @@ function AddEmployee({ onNavigate }) {
                 <option value="Intern">Intern</option>
               </select>
             </div>
+            <div className="admin-form-group">
+                <label htmlFor="role">
+                  Role <span>*</span>
+                </label>
+
+                <select
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="Employee">Employee</option>
+                  <option value="Manager">Manager</option>
+                  <option value="Admin">Admin</option>
+                </select>
+              </div>
+
+             <div className="admin-form-group">
+              <label htmlFor="jobLocation">
+                Job Location <span>*</span>
+              </label>
+
+              <select
+                id="jobLocation"
+                name="jobLocation"
+                value={formData.jobLocation}
+                onChange={handleChange}
+                required
+              >
+                <option value="Remote">Remote</option>
+                <option value="Hybrid">Hybrid</option>
+                <option value="Onsite">Onsite</option>
+              </select>
+            </div> 
 
             <div className="admin-form-group">
               <label htmlFor="status">

@@ -104,6 +104,16 @@ function Employees({ onNavigate }) {
     }
   };
 
+  function formatDate(date) {
+  if (!date) return "—";
+
+  return new Date(date).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
   return (
     <div className="admin-page">
       <div className="admin-page-header">
@@ -158,9 +168,11 @@ function Employees({ onNavigate }) {
             <thead>
               <tr>
                 <th>Employee</th>
-                <th>Employee Code</th>
+                <th>Employee ID</th>
                 <th>Department</th>
-                <th>Designation</th>
+                <th>Role</th>
+                <th>Job Location</th>
+                <th>Length of Service</th>
                 <th>Joining Date</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -169,7 +181,7 @@ function Employees({ onNavigate }) {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="admin-empty-state">
+                  <td colSpan="9" className="admin-empty-state">
                     Loading employees...
                   </td>
                 </tr>
@@ -205,10 +217,14 @@ function Employees({ onNavigate }) {
                         {employee.department_name || "N/A"}
                       </td>
                       <td>
-                        {employee.designation_name || "N/A"}
+                        {employee.role || "—"}
                       </td>
                       <td>
-                        {employee.joiningDate || "N/A"}
+                        {employee.jobLocation || "—"}
+                      </td>
+                        {employee.lengthOfService || "—"}
+                      <td>
+                        {formatDate(employee.joiningDate) || "—"}
                       </td>
                       <td>
                         <span
