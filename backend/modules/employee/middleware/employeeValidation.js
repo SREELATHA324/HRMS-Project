@@ -17,12 +17,8 @@ function validateEmployee(req, res, next) {
 
     const errors = [];
 
-    if (!employeeCode) errors.push('Employee code is required');
     if (!firstName) errors.push('First name is required');
     if (!email) errors.push('Email is required');
-    if (!departmentId) errors.push('Department is required');
-    if (!designationId) errors.push('Designation is required');
-    if (!joiningDate) errors.push('Joining date is required');
 
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         errors.push('Valid email is required');

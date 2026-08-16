@@ -10,7 +10,8 @@ module.exports = function(...allowedRoles) {
                 });
             }
 
-            if (!allowedRoles.includes(userRole)) {
+            const normalizedRoles = allowedRoles.map(r => r.toLowerCase());
+            if (!normalizedRoles.includes(userRole.toLowerCase())) {
                 return res.status(403).json({
                     success: false,
                     message: 'Forbidden: Insufficient permissions'

@@ -15,13 +15,21 @@ const getHeaders = () => {
 };
 
 const handleResponse = async (response) => {
-  const data = await response.json();
+  let data;
+  try {
+    data = await response.json();
+  } catch (e) {
+    data = {};
+  }
 
   if (!response.ok) {
     if (response.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      window.location.href = "/login";
+      
+      if (!window.location.hash.includes("login")) {
+        window.location.hash = "login";
+      }
     }
     throw new Error(
       data.message ||
@@ -39,7 +47,6 @@ export const api = {
       method: "GET",
       headers: getHeaders(),
     });
-
     return handleResponse(response);
   },
 
@@ -49,7 +56,6 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(data),
     });
-
     return handleResponse(response);
   },
 
@@ -59,7 +65,6 @@ export const api = {
       headers: getHeaders(),
       body: JSON.stringify(data),
     });
-
     return handleResponse(response);
   },
 
@@ -68,7 +73,6 @@ export const api = {
       method: "DELETE",
       headers: getHeaders(),
     });
-
     return handleResponse(response);
   },
 };

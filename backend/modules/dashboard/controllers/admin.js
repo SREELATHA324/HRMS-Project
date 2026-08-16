@@ -2,20 +2,21 @@ const pool = require('../../../db');
 
 async function adminDashboard(req, res) {
     try {
-        const totalEmployees = await pool.query('SELECT COUNT(*) FROM employees');
+        const totalEmployees = await pool.query('SELECT COUNT(*) FROM employees WHERE deleted_at IS NULL');
         const activeEmployees = await pool.query(
-            "SELECT COUNT(*) FROM employees WHERE status = 'Active'"
+            "SELECT COUNT(*) FROM employees WHERE status = 'Active' AND deleted_at IS NULL"
         );
         const inactiveEmployees = await pool.query(
-            "SELECT COUNT(*) FROM employees WHERE status != 'Active'"
+            "SELECT COUNT(*) FROM employees WHERE status != 'Active' AND deleted_at IS NULL"
         );
-        const departments = await pool.query('SELECT COUNT(*) FROM departments');
+        const departments = await pool.query('SELECT COUNT(*) FROM departments WHERE is_active = true');
 
         const recentEmployees = await pool.query(
             `SELECT e.id, e."employeeCode", e."firstName", e."lastName", e.email, 
                     d.name as department_name, e.status, e."joiningDate"
              FROM employees e
              LEFT JOIN departments d ON e."departmentId" = d.id
+             WHERE e.deleted_at IS NULL
              ORDER BY e.created_at DESC LIMIT 5`
         );
 
@@ -26,6 +27,7 @@ async function adminDashboard(req, res) {
                 e.created_at as activity_date,
                 'New employee added: ' || e."firstName" || ' ' || e."lastName" as description
              FROM employees e
+             WHERE e.deleted_at IS NULL
              ORDER BY e.created_at DESC LIMIT 10`
         );
 
@@ -37,6 +39,7 @@ async function adminDashboard(req, res) {
                 'Status changed from ' || esh."oldStatus" || ' to ' || esh."newStatus" as description
              FROM employee_status_history esh
              JOIN employees e ON esh."employeeId" = e.id
+             WHERE e.deleted_at IS NULL
              ORDER BY esh.created_at DESC LIMIT 10`
         );
 
@@ -48,7 +51,7 @@ async function adminDashboard(req, res) {
                 'Employee details updated' as description
              FROM employee_history eh
              JOIN employees e ON eh."employeeId" = e.id
-             WHERE eh."changeType" = 'Updated'
+             WHERE e.deleted_at IS NULL AND eh."changeType" = 'Updated'
              ORDER BY eh.created_at DESC LIMIT 10`
         );
 
@@ -65,7 +68,7 @@ async function adminDashboard(req, res) {
         const departmentStats = await pool.query(
             `SELECT d.name, COUNT(e.id) as count
              FROM departments d
-             LEFT JOIN employees e ON d.id = e."departmentId"
+             LEFT JOIN employees e ON d.id = e."departmentId" AND e.deleted_at IS NULL
              WHERE d.is_active = true
              GROUP BY d.id, d.name
              ORDER BY count DESC`
@@ -74,10 +77,10 @@ async function adminDashboard(req, res) {
         res.status(200).json({
             success: true,
             data: {
-                totalEmployees: parseInt(totalEmployees.rows[0].count),
-                activeEmployees: parseInt(activeEmployees.rows[0].count),
-                inactiveEmployees: parseInt(inactiveEmployees.rows[0].count),
-                departments: parseInt(departments.rows[0].count),
+                totalEmployees: parseInt(totalEmployees.rows[0].count) || 0,
+                activeEmployees: parseInt(activeEmployees.rows[0].count) || 0,
+                inactiveEmployees: parseInt(inactiveEmployees.rows[0].count) || 0,
+                departments: parseInt(departments.rows[0].count) || 0,
                 recentEmployees: recentEmployees.rows,
                 recentActivities: recentActivities,
                 departmentStats: departmentStats.rows
