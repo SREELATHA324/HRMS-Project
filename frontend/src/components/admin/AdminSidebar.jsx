@@ -65,11 +65,13 @@ const menuItems = [
   },
 ];
 
-function AdminSidebar({ onNavigate, onLogout,activePage = "dashboard" }) {
+function AdminSidebar({
+  onNavigate,
+  onLogout,
+  activePage = "dashboard",
+}) {
   return (
     <aside className="admin-sidebar">
-
-      {/* Brand */}
       <div className="admin-sidebar-brand">
         <div className="admin-sidebar-logo">H</div>
 
@@ -79,7 +81,6 @@ function AdminSidebar({ onNavigate, onLogout,activePage = "dashboard" }) {
         </div>
       </div>
 
-      {/* Navigation */}
       <nav className="admin-sidebar-nav">
         <p className="admin-nav-title">MAIN MENU</p>
 
@@ -102,18 +103,16 @@ function AdminSidebar({ onNavigate, onLogout,activePage = "dashboard" }) {
         })}
       </nav>
 
-      {/* User */}
       <div className="admin-sidebar-footer">
-  <button
-    type="button"
-    className="admin-logout-button"
-    onClick={onLogout}
-  >
-    <LogOut size={18} />
-    <span>Logout</span>
-  </button>
-</div>
-
+        <button
+          type="button"
+          className="admin-logout-button"
+          onClick={onLogout}
+        >
+          <LogOut size={18} />
+          <span>Logout</span>
+        </button>
+      </div>
     </aside>
   );
 }

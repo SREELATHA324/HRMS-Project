@@ -122,11 +122,6 @@ CREATE TABLE employees (
     "lastName" VARCHAR(100),
     email VARCHAR(150) NOT NULL UNIQUE,
     phone VARCHAR(30),
-    "personalEmail" VARCHAR(150),
-    "personalMobile" VARCHAR(30),
-    "emergencyContact" VARCHAR(150),
-    "emergencyMobile" VARCHAR(30),
-    "bloodGroup" VARCHAR(10),
     "dateOfBirth" DATE,
     gender VARCHAR(30),
     address TEXT,
@@ -140,9 +135,6 @@ CREATE TABLE employees (
     "joiningDate" DATE NOT NULL,
     "employmentType" VARCHAR(50),
     status VARCHAR(30) NOT NULL DEFAULT 'Active',
-    "role" VARCHAR(50) DEFAULT 'employee',
-    "job_location" VARCHAR(50) DEFAULT 'onsite',
-    "deleted_at" TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -217,39 +209,57 @@ CREATE TABLE branches (
 
 CREATE INDEX idx_employees_userId
 ON employees("userId");
-CREATE INDEX idx_employees_departmentId 
+
+CREATE INDEX idx_employees_departmentId
 ON employees("departmentId");
-CREATE INDEX idx_employees_designationId 
+
+CREATE INDEX idx_employees_designationId
 ON employees("designationId");
-CREATE INDEX idx_employees_reportingManagerId 
+
+CREATE INDEX idx_employees_reportingManagerId
 ON employees("reportingManagerId");
-CREATE INDEX idx_employee_emergency_contacts_employeeId 
+
+CREATE INDEX idx_employee_emergency_contacts_employeeId
 ON employee_emergency_contacts("employeeId");
-CREATE INDEX idx_employee_bank_accounts_employeeId 
+
+CREATE INDEX idx_employee_bank_accounts_employeeId
 ON employee_bank_accounts("employeeId");
-CREATE INDEX idx_employee_history_employeeId 
+
+CREATE INDEX idx_employee_history_employeeId
 ON employee_history("employeeId");
-CREATE INDEX idx_employee_status_history_employeeId 
+
+CREATE INDEX idx_employee_status_history_employeeId
 ON employee_status_history("employeeId");
-CREATE INDEX idx_branches_company_id 
+
+CREATE INDEX idx_branches_company_id
 ON branches(company_id);
+
 CREATE INDEX idx_users_role_id 
 ON users(role_id);
+
 CREATE INDEX idx_user_sessions_user_id 
 ON user_sessions(user_id);
+
 CREATE INDEX idx_user_sessions_expires_at 
 ON user_sessions(expires_at);
+
 CREATE INDEX idx_password_reset_tokens_user_id 
 ON password_reset_tokens(user_id);
+
 CREATE INDEX idx_password_history_user_id 
 ON password_history(user_id);
+
 CREATE INDEX idx_email_verification_tokens_user_id 
 ON email_verification_tokens(user_id);
+
 CREATE INDEX idx_login_history_user_id 
 ON login_history(user_id);
+
 CREATE INDEX idx_login_history_login_at 
 ON login_history(login_at);
+
 CREATE INDEX idx_security_history_user_id 
 ON security_history(user_id);
+
 CREATE INDEX idx_security_history_created_at 
 ON security_history(created_at);
