@@ -8,12 +8,14 @@ const verifyOTP = require('./controllers/verifyOtp');
 const resetPassword = require('./controllers/resetPassword');
 const auth = require('./middleware/auth');
 const roleCheck = require('./middleware/roleCheck');
+const changePassword = require('./controllers/changePassword');
 
 router.post('/login', login);
 router.post('/forgot-password', forgotPassword);
 router.post('/send-otp', sendOTP);
 router.post('/verify-otp', verifyOTP);
 router.post('/reset-password', resetPassword);
+router.post('/change-password', auth, changePassword);
 
 router.get('/admin-only', auth, roleCheck('admin'), (req, res) => {
     res.json({
