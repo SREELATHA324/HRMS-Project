@@ -11,7 +11,7 @@ import {
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminHeader from "../../components/admin/AdminHeader";
 import StatCard from "../../components/admin/StatCard";
-import Attendance from "./Attendance";
+import Profile from "../profile/Profile";
 import { api } from "../../services/api";
 
 function AdminDashboard({ onNavigate, onLogout }) {
@@ -55,7 +55,7 @@ function AdminDashboard({ onNavigate, onLogout }) {
   };
 
   const handleNavigation = (page) => {
-    if (page === "attendance" || page === "dashboard") {
+    if (page === "attendance" || page === "dashboard"|| page === "profile") {
       setActivePage(page);
       return;
     }
@@ -123,7 +123,7 @@ function AdminDashboard({ onNavigate, onLogout }) {
         />
 
         <main className="admin-main">
-          <AdminHeader />
+          <AdminHeader onNavigate={handleNavigation} />
 
           <div className="admin-dashboard-content">
             <div className="admin-loading">
@@ -144,11 +144,15 @@ function AdminDashboard({ onNavigate, onLogout }) {
       />
 
       <main className="admin-main">
-        <AdminHeader />
+        <AdminHeader onNavigate={handleNavigation} />
 
         {activePage === "attendance" ? (
           <div className="admin-dashboard-content">
             <Attendance />
+          </div>
+        ) : activePage === "profile" ? (
+          <div className="admin-dashboard-content">
+            <Profile />
           </div>
         ) : (
           <div className="admin-dashboard-content">
