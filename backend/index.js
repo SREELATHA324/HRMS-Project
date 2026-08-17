@@ -18,6 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 const authRoutes = require('./modules/authentication/routes');
 const employeeRoutes = require('./modules/employee/routes');
 const dashboardRoutes = require('./modules/dashboard/routes');
+const attendanceRoutes = require('./modules/attendance/routes');
 
 app.get('/health', async (req, res) => {
     try {
@@ -43,6 +44,7 @@ app.get('/health', async (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/attendance', attendanceRoutes);
 
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);
