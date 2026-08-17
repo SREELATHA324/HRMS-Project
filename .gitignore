@@ -1,0 +1,188 @@
+Now we know the problem. 👍
+
+This command:
+
+Get-ChildItem -Force | Where-Object {$_.Name -like "*gitignore*"}
+
+returned nothing.
+
+So there is no .gitignore file in your current project root:
+
+C:\Users\Administrator\OneDrive\Desktop\HRMS-Project-main
+
+You probably edited a .gitignore inside another folder.
+
+Fix it
+
+From your current folder, run:
+
+New-Item -Path .gitignore -ItemType File
+
+Then open it:
+
+notepad .gitignore
+
+Add:
+
+# Environment files
+.env
+.env.*
+!.env.example
+*.env
+
+Save and close Notepad.
+
+Now test it
+
+Run:
+
+git check-ignore -v database/.env
+
+You should now get something like:
+
+.gitignore:5:*.env    database/.env
+
+Then:
+
+git status
+
+database/.env should no longer appear under Untracked files. ✅
+
+Then commit the .gitignore
+git add .gitignore
+git commit -m "Add gitignore for environment files"
+
+Finally verify:
+
+git status
+
+You should ideally see:
+
+On branch attendance-module
+nothing to commit, working tree clean
+
+Do not add database/.env with git add. Keep that file only on your local computer.
+
+PS C:\Users\Administrator\OneDrive\Desktop\HRMS-Project-main> notepad .gitignore
+PS C:\Users\Administrator\OneDrive\Desktop\HRMS-Project-main> git check-ignore -v database/.env
+PS C:\Users\Administrator\OneDrive\Desktop\HRMS-Project-main> 
+
+Okay. Since git check-ignore still gives no output, let's verify whether the new .gitignore actually contains the rule.
+
+1. Run this
+Get-Content .gitignore
+
+You should see:
+
+.env
+.env.*
+!.env.example
+*.env
+2. If you see those lines, run:
+git check-ignore -v --no-index database/.env
+
+Notice the --no-index.
+
+You should get something like:
+
+.gitignore:4:*.env    database/.env
+3. Then check:
+git status
+
+database/.env should no longer appear under Untracked files.
+
+If Get-Content .gitignore shows nothing or gives an error, then the file wasn't saved correctly.
+
+Run these two commands and send me the output:
+
+Get-Content .gitignore
+Get-Item .gitignore | Select-Object FullName,Length
+
+Don't worry about database/.env—do not delete it. We are only making Git ignore it.
+
+Ah, now we found the issue. ✅
+
+Your screenshot shows that .gitignore is inside the frontend folder:
+
+HRMS-Project-main
+└── frontend
+    ├── .env
+    ├── .gitignore   ← this one
+    ├── package.json
+    └── ...
+
+But your database/.env is outside frontend:
+
+HRMS-Project-main
+├── database
+│   └── .env
+├── frontend
+│   └── .gitignore
+└── ...
+
+Therefore, frontend/.gitignore cannot ignore database/.env.
+
+Do this
+
+From your current root folder:
+
+C:\Users\Administrator\OneDrive\Desktop\HRMS-Project-main
+
+run:
+
+notepad .gitignore
+
+If Notepad asks to create the file, choose Yes.
+
+Put this in the root .gitignore:
+
+# Environment files
+.env
+.env.*
+*.env
+!.env.example
+
+
+# Dependencies
+node_modules/
+
+
+# Build files
+dist/
+
+Save it.
+
+Now test
+
+Run:
+
+git check-ignore -v database/.env
+
+You should now get something similar to:
+
+.gitignore:4:*.env    database/.env
+
+Then:
+
+git status
+
+database/.env should disappear from the Untracked files section. ✅
+
+Important
+
+You can keep:
+
+frontend/.gitignore
+
+You don't need to delete it. The new root .gitignore is what protects files across your entire HRMS project.
+
+After that, run:
+
+git add .gitignore
+git commit -m "Add root gitignore for environment files"
+
+Then verify:
+
+git status
+
+And do not run git add database/.env.
