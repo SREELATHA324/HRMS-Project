@@ -1,11 +1,13 @@
 import { Bell, Search } from "lucide-react";
 
-function AdminHeader() {
+function AdminHeader({ onNavigate }) {
   return (
     <header className="admin-header">
       <div>
         <h1>Admin Dashboard</h1>
-        <p>Here's what's happening with your organization today.</p>
+        <p>
+          Here's what's happening with your organization today.
+        </p>
       </div>
 
       <div className="admin-header-actions">
@@ -26,14 +28,21 @@ function AdminHeader() {
           <span className="notification-dot"></span>
         </button>
 
-        <div className="admin-header-user">
-          <div className="admin-header-avatar">A</div>
+        <button
+          type="button"
+          className="admin-header-user"
+          onClick={() => onNavigate?.("profile")}
+          title="View Profile"
+        >
+          <div className="admin-header-avatar">
+            A
+          </div>
 
           <div>
             <strong>Administrator</strong>
             <span>Admin</span>
           </div>
-        </div>
+        </button>
       </div>
     </header>
   );
