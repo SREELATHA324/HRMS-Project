@@ -117,7 +117,7 @@ CREATE TABLE designations (
 CREATE TABLE employees (
     id BIGSERIAL PRIMARY KEY,
     "userId" BIGINT UNIQUE REFERENCES users(id) ON DELETE SET NULL,
-    "employeeCode" VARCHAR(50) NOT NULL UNIQUE,
+    "employeeId" VARCHAR(50) NOT NULL UNIQUE,
     "firstName" VARCHAR(100) NOT NULL,
     "lastName" VARCHAR(100),
     email VARCHAR(150) NOT NULL UNIQUE,
@@ -135,8 +135,12 @@ CREATE TABLE employees (
     "joiningDate" DATE NOT NULL,
     "employmentType" VARCHAR(50),
     status VARCHAR(30) NOT NULL DEFAULT 'Active',
+    role VARCHAR(100),
+    job_location VARCHAR(20),
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_employee_job_location
+        CHECK (job_location IN ('Hybrid', 'Onsite', 'Remote'))
 );
 
 ALTER TABLE departments
