@@ -11,20 +11,22 @@ const updateEmployee = require('./controllers/update');
 const deleteEmployee = require('./controllers/delete');
 const getDepartments = require('./controllers/getDepartments');
 const getDesignations = require('./controllers/getDesignations');
+
 const getProfile = require('./controllers/getProfile');
 const updateProfile = require('./controllers/updateProfile');
 
 router.use(auth);
 
+router.get('/profile', getProfile);
+router.put('/profile', updateProfile);
+
 router.get('/', roleCheck('admin', 'hr'), getAllEmployees);
 router.get('/departments', roleCheck('admin', 'hr'), getDepartments);
 router.get('/designations', roleCheck('admin', 'hr'), getDesignations);
+
 router.get('/:id', roleCheck('admin', 'hr'), getEmployeeById);
 router.post('/', roleCheck('admin', 'hr'), validateEmployee, createEmployee);
 router.put('/:id', roleCheck('admin', 'hr'), validateEmployee, updateEmployee);
 router.delete('/:id', roleCheck('admin'), deleteEmployee);
-
-router.get('/profile', getProfile);
-router.put('/profile', updateProfile);
 
 module.exports = router;
