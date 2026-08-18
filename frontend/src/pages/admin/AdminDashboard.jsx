@@ -12,6 +12,7 @@ import AdminSidebar from "../../components/admin/AdminSidebar";
 import AdminHeader from "../../components/admin/AdminHeader";
 import StatCard from "../../components/admin/StatCard";
 import Profile from "../profile/Profile";
+import Attendance from "./Attendance";
 import { api } from "../../services/api";
 
 function AdminDashboard({ onNavigate, onLogout }) {
