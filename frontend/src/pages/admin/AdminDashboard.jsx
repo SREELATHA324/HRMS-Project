@@ -56,7 +56,7 @@ function AdminDashboard({ onNavigate, onLogout }) {
   };
 
   const handleNavigation = (page) => {
-    if (page === "attendance" || page === "dashboard"|| page === "profile") {
+    if (page === "dashboard"|| page === "profile") {
       setActivePage(page);
       return;
     }
@@ -64,6 +64,12 @@ function AdminDashboard({ onNavigate, onLogout }) {
     if (onNavigate) {
       onNavigate(page);
     }
+    if (page === "attendance") {
+  if (onNavigate) {
+    onNavigate("attendance");
+  }
+  return;
+}
   };
 
   const getActivityIcon = (type) => {
@@ -147,11 +153,7 @@ function AdminDashboard({ onNavigate, onLogout }) {
       <main className="admin-main">
         <AdminHeader onNavigate={handleNavigation} />
 
-        {activePage === "attendance" ? (
-          <div className="admin-dashboard-content">
-            <Attendance />
-          </div>
-        ) : activePage === "profile" ? (
+        {activePage === "profile" ? (
           <div className="admin-dashboard-content">
             <Profile />
           </div>

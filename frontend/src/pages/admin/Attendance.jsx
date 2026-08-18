@@ -9,7 +9,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { api } from "../../services/api";
-import "./Attendance.css";
+import "../../App.css";
 
 function Attendance({ onBack }) {
   const getToday = () => {
