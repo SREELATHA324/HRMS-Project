@@ -17,24 +17,38 @@ function Attendance({ onBack }) {
 
     return `${d.getFullYear()}-${String(
       d.getMonth() + 1
-    ).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    ).padStart(2, "0")}-${String(
+      d.getDate()
+    ).padStart(2, "0")}`;
   };
 
-  const [selectedDate, setSelectedDate] = useState(getToday());
+  const [selectedDate, setSelectedDate] =
+    useState(getToday());
+
   const [attendance, setAttendance] = useState([]);
+
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [departmentFilter, setDepartmentFilter] = useState("All");
+
+  const [statusFilter, setStatusFilter] =
+    useState("All");
+
+  const [departmentFilter, setDepartmentFilter] =
+    useState("All");
 
   const [loading, setLoading] = useState(false);
+
   const [error, setError] = useState("");
 
-  const [viewRecord, setViewRecord] = useState(null);
-  const [editRecord, setEditRecord] = useState(null);
+  const [viewRecord, setViewRecord] =
+    useState(null);
+
+  const [editRecord, setEditRecord] =
+    useState(null);
 
   const [editForm, setEditForm] = useState({
     check_in: "",
     check_out: "",
+    status: "Present",
     reason: "",
   });
 
@@ -47,8 +61,6 @@ function Attendance({ onBack }) {
         `/attendance/daily?date=${selectedDate}`
       );
 
-      console.log("ATTENDANCE API RESPONSE:", response);
-
       if (response?.success) {
         const rows = Array.isArray(response.data)
           ? response.data
@@ -59,16 +71,23 @@ function Attendance({ onBack }) {
         setAttendance(rows);
       } else {
         setAttendance([]);
+
         setError(
-          response?.message || "Failed to load attendance"
+          response?.message ||
+            "Failed to load attendance"
         );
       }
     } catch (err) {
-      console.error("Attendance API Error:", err);
+      console.error(
+        "Attendance API Error:",
+        err
+      );
 
       setAttendance([]);
+
       setError(
-        err?.message || "Unable to load attendance"
+        err?.message ||
+          "Unable to load attendance"
       );
     } finally {
       setLoading(false);
@@ -90,7 +109,8 @@ function Attendance({ onBack }) {
       record?.last_name ||
       "";
 
-    const fullName = `${first} ${last}`.trim();
+    const fullName =
+      `${first} ${last}`.trim();
 
     if (fullName) {
       return fullName;
@@ -109,26 +129,36 @@ function Attendance({ onBack }) {
       record?.employeeCode ||
       record?.employee_code ||
       record?.employee_id ||
+      record?.emp_id ||
       record?.id ||
       "--"
     );
   };
 
   const getInitials = (record) => {
-    const name = getEmployeeName(record);
+    const name =
+      getEmployeeName(record);
 
-    if (!name || name === "Unknown Employee") {
+    if (
+      !name ||
+      name === "Unknown Employee"
+    ) {
       return "E";
     }
 
-    const parts = name.split(" ").filter(Boolean);
+    const parts = name
+      .split(" ")
+      .filter(Boolean);
 
     if (parts.length === 1) {
-      return parts[0].substring(0, 2).toUpperCase();
+      return parts[0]
+        .substring(0, 2)
+        .toUpperCase();
     }
 
     return (
-      parts[0][0] + parts[parts.length - 1][0]
+      parts[0][0] +
+      parts[parts.length - 1][0]
     ).toUpperCase();
   };
 
@@ -165,13 +195,17 @@ function Attendance({ onBack }) {
       return "--";
     }
 
-    const wholeHours = Math.floor(hours);
+    const wholeHours =
+      Math.floor(hours);
 
     const minutes = Math.round(
       (hours - wholeHours) * 60
     );
 
-    if (wholeHours === 0 && minutes === 0) {
+    if (
+      wholeHours === 0 &&
+      minutes === 0
+    ) {
       return "0h";
     }
 
@@ -194,16 +228,16 @@ function Attendance({ onBack }) {
       record?.status || ""
     ).toLowerCase();
 
-    if (status.includes("half")) {
-      return "Half Day";
-    }
-
     if (status.includes("absent")) {
       return "Absent";
     }
 
     if (status.includes("late")) {
       return "Late";
+    }
+
+    if (status.includes("half")) {
+      return "Half Day";
     }
 
     if (status.includes("present")) {
@@ -215,159 +249,208 @@ function Attendance({ onBack }) {
 
   const departments = useMemo(() => {
     const list = attendance
-      .map((record) => record?.department_name)
+      .map(
+        (record) =>
+          record?.department_name
+      )
       .filter(Boolean);
 
-    return ["All", ...new Set(list)];
+    return [
+      "All",
+      ...new Set(list),
+    ];
   }, [attendance]);
 
-  const filteredAttendance = useMemo(() => {
-    const searchText = search
-      .trim()
-      .toLowerCase();
+  const filteredAttendance =
+    useMemo(() => {
+      const searchText =
+        search.trim().toLowerCase();
 
-    return attendance.filter((record) => {
-      const employeeName = getEmployeeName(
-        record
-      ).toLowerCase();
+      return attendance.filter(
+        (record) => {
+          const employeeName =
+            getEmployeeName(
+              record
+            ).toLowerCase();
 
-      const employeeId = String(
-        getEmployeeId(record)
-      ).toLowerCase();
+          const employeeId =
+            String(
+              getEmployeeId(record)
+            ).toLowerCase();
 
-      const department =
-        record?.department_name || "";
+          const department =
+            record?.department_name ||
+            "";
 
-      const status = getStatus(record);
+          const status =
+            getStatus(record);
 
-      const matchesSearch =
-        !searchText ||
-        employeeName.includes(searchText) ||
-        employeeId.includes(searchText);
+          const matchesSearch =
+            !searchText ||
+            employeeName.includes(
+              searchText
+            ) ||
+            employeeId.includes(
+              searchText
+            );
 
-      const matchesStatus =
-        statusFilter === "All" ||
-        status === statusFilter;
+          const matchesStatus =
+            statusFilter === "All" ||
+            status === statusFilter;
 
-      const matchesDepartment =
-        departmentFilter === "All" ||
-        department === departmentFilter;
+          const matchesDepartment =
+            departmentFilter === "All" ||
+            department ===
+              departmentFilter;
 
-      return (
-        matchesSearch &&
-        matchesStatus &&
-        matchesDepartment
+          return (
+            matchesSearch &&
+            matchesStatus &&
+            matchesDepartment
+          );
+        }
       );
-    });
-  }, [
-    attendance,
-    search,
-    statusFilter,
-    departmentFilter,
-  ]);
+    }, [
+      attendance,
+      search,
+      statusFilter,
+      departmentFilter,
+    ]);
 
-  const totalEmployees = attendance.length;
+  const totalEmployees =
+    attendance.length;
 
-  const presentCount = attendance.filter(
-    (record) =>
-      getStatus(record) === "Present"
-  ).length;
+  const presentCount =
+    attendance.filter(
+      (record) =>
+        getStatus(record) ===
+        "Present"
+    ).length;
 
-  const absentCount = attendance.filter(
-    (record) =>
-      getStatus(record) === "Absent"
-  ).length;
+  const absentCount =
+    attendance.filter(
+      (record) =>
+        getStatus(record) ===
+        "Absent"
+    ).length;
 
-  const lateCount = attendance.filter(
-    (record) =>
-      getStatus(record) === "Late"
-  ).length;
+  const lateCount =
+    attendance.filter(
+      (record) =>
+        getStatus(record) ===
+        "Late"
+    ).length;
 
   const openEdit = (record) => {
     setEditRecord(record);
 
     setEditForm({
       check_in: record?.check_in
-        ? new Date(record.check_in)
+        ? new Date(
+            record.check_in
+          )
             .toISOString()
             .slice(0, 16)
         : "",
 
       check_out: record?.check_out
-        ? new Date(record.check_out)
+        ? new Date(
+            record.check_out
+          )
             .toISOString()
             .slice(0, 16)
         : "",
+
+      status:
+        getStatus(record),
 
       reason: "",
     });
   };
 
-  const saveCorrection = async () => {
-    if (!editRecord) {
-      return;
-    }
+  const saveCorrection =
+    async () => {
+      if (!editRecord) {
+        return;
+      }
 
-    try {
-      const payload = {
-        attendance_id:
-          editRecord.attendance_id || undefined,
-
-        employee_id:
-          editRecord.employee_id,
-
-        date: selectedDate,
-
-        requested_check_in:
-          editForm.check_in || null,
-
-        requested_check_out:
-          editForm.check_out || null,
-
-        reason:
-          editForm.reason ||
-          "Attendance regularisation",
-      };
-
-      const response = await api.post(
-        "/attendance/correction",
-        payload
-      );
-
-      if (!response?.success) {
+      if (
+        !editForm.reason.trim()
+      ) {
         alert(
-          response?.message ||
-            "Unable to submit correction"
+          "Please enter a reason for attendance regularisation."
         );
 
         return;
       }
 
-      alert(
-        "Attendance correction submitted successfully"
-      );
+      try {
+        const payload = {
+          attendance_id:
+            editRecord.attendance_id ||
+            undefined,
 
-      setEditRecord(null);
+          employee_id:
+            editRecord.employee_id,
 
-      setEditForm({
-        check_in: "",
-        check_out: "",
-        reason: "",
-      });
+          date: selectedDate,
 
-      await loadAttendance();
-    } catch (err) {
-      console.error(
-        "Correction error:",
-        err
-      );
+          requested_check_in:
+            editForm.check_in ||
+            null,
 
-      alert(
-        err?.message ||
-          "Unable to submit correction"
-      );
-    }
-  };
+          requested_check_out:
+            editForm.check_out ||
+            null,
+
+          status:
+            editForm.status,
+
+          reason:
+            editForm.reason.trim(),
+        };
+
+        const response =
+          await api.post(
+            "/attendance/correction",
+            payload
+          );
+
+        if (!response?.success) {
+          alert(
+            response?.message ||
+              "Unable to submit correction"
+          );
+
+          return;
+        }
+
+        alert(
+          "Attendance regularisation submitted successfully."
+        );
+
+        setEditRecord(null);
+
+        setEditForm({
+          check_in: "",
+          check_out: "",
+          status: "Present",
+          reason: "",
+        });
+
+        await loadAttendance();
+      } catch (err) {
+        console.error(
+          "Correction error:",
+          err
+        );
+
+        alert(
+          err?.message ||
+            "Unable to submit correction"
+        );
+      }
+    };
 
   const clearFilters = () => {
     setSearch("");
@@ -381,9 +464,11 @@ function Attendance({ onBack }) {
       <div className="attendance-container">
 
         <div className="attendance-top">
+
           <div>
             {onBack && (
               <button
+                type="button"
                 className="attendance-back"
                 onClick={onBack}
               >
@@ -391,52 +476,109 @@ function Attendance({ onBack }) {
               </button>
             )}
 
-            <h1>Attendance</h1>
+            <h1>
+              Attendance
+            </h1>
 
             <p>
-              View and manage daily employee attendance
+              View and manage daily
+              employee attendance
             </p>
           </div>
 
           <button
-            className="attendance-refresh"
-            onClick={loadAttendance}
             type="button"
+            className="attendance-refresh"
+            onClick={
+              loadAttendance
+            }
           >
-            <RefreshCw size={17} />
+            <RefreshCw
+              size={17}
+            />
+
             Refresh
           </button>
+
         </div>
 
         <div className="attendance-summary">
 
-          <div className="summary-card">
-            <span>Total Employees</span>
-            <strong>{totalEmployees}</strong>
+          <div className="summary-card total">
+            <div className="summary-card-top">
+              <span>
+                Total Employees
+              </span>
+
+              <div className="summary-icon">
+                <UsersIcon />
+              </div>
+            </div>
+
+            <strong>
+              {totalEmployees}
+            </strong>
+
             <small>
               Employees for selected date
             </small>
           </div>
 
-          <div className="summary-card">
-            <span>Present</span>
-            <strong>{presentCount}</strong>
+          <div className="summary-card present">
+            <div className="summary-card-top">
+              <span>
+                Present
+              </span>
+
+              <div className="summary-icon">
+                <PresentIcon />
+              </div>
+            </div>
+
+            <strong>
+              {presentCount}
+            </strong>
+
             <small>
               Present employees
             </small>
           </div>
 
-          <div className="summary-card">
-            <span>Absent</span>
-            <strong>{absentCount}</strong>
+          <div className="summary-card absent">
+            <div className="summary-card-top">
+              <span>
+                Absent
+              </span>
+
+              <div className="summary-icon">
+                <AbsentIcon />
+              </div>
+            </div>
+
+            <strong>
+              {absentCount}
+            </strong>
+
             <small>
               Absent employees
             </small>
           </div>
 
-          <div className="summary-card">
-            <span>Late</span>
-            <strong>{lateCount}</strong>
+          <div className="summary-card late">
+            <div className="summary-card-top">
+              <span>
+                Late
+              </span>
+
+              <div className="summary-icon">
+                <LateIcon />
+              </div>
+            </div>
+
+            <strong>
+              {lateCount}
+            </strong>
+
             <small>
               Late employees
             </small>
@@ -447,14 +589,22 @@ function Attendance({ onBack }) {
         <div className="attendance-card">
 
           <div className="attendance-card-header">
+
             <div>
-              <h2>Daily Attendance</h2>
+              <h2>
+                Daily Attendance
+              </h2>
 
               <span>
                 Attendance records for{" "}
                 {selectedDate}
               </span>
             </div>
+
+            <span className="attendance-record-count">
+              {filteredAttendance.length} Records
+            </span>
+
           </div>
 
           <div className="attendance-filters">
@@ -467,17 +617,23 @@ function Attendance({ onBack }) {
                 placeholder="Search employee name or ID"
                 value={search}
                 onChange={(e) =>
-                  setSearch(e.target.value)
+                  setSearch(
+                    e.target.value
+                  )
                 }
               />
             </div>
 
             <div className="attendance-date">
-              <CalendarDays size={17} />
+              <CalendarDays
+                size={17}
+              />
 
               <input
                 type="date"
-                value={selectedDate}
+                value={
+                  selectedDate
+                }
                 onChange={(e) =>
                   setSelectedDate(
                     e.target.value
@@ -487,7 +643,9 @@ function Attendance({ onBack }) {
             </div>
 
             <select
-              value={statusFilter}
+              value={
+                statusFilter
+              }
               onChange={(e) =>
                 setStatusFilter(
                   e.target.value
@@ -516,7 +674,9 @@ function Attendance({ onBack }) {
             </select>
 
             <select
-              value={departmentFilter}
+              value={
+                departmentFilter
+              }
               onChange={(e) =>
                 setDepartmentFilter(
                   e.target.value
@@ -526,10 +686,15 @@ function Attendance({ onBack }) {
               {departments.map(
                 (department) => (
                   <option
-                    key={department}
-                    value={department}
+                    key={
+                      department
+                    }
+                    value={
+                      department
+                    }
                   >
-                    {department === "All"
+                    {department ===
+                    "All"
                       ? "All Departments"
                       : department}
                   </option>
@@ -538,9 +703,11 @@ function Attendance({ onBack }) {
             </select>
 
             <button
-              className="clear-button"
               type="button"
-              onClick={clearFilters}
+              className="clear-button"
+              onClick={
+                clearFilters
+              }
             >
               Clear
             </button>
@@ -582,21 +749,25 @@ function Attendance({ onBack }) {
                       Loading attendance...
                     </td>
                   </tr>
-                ) : filteredAttendance.length === 0 ? (
+                ) : filteredAttendance.length ===
+                  0 ? (
                   <tr>
                     <td
                       colSpan="9"
                       className="attendance-empty"
                     >
-                      No employee attendance found
+                      No employee
+                      attendance
+                      found
                     </td>
                   </tr>
                 ) : (
                   filteredAttendance.map(
                     (record) => {
-
                       const status =
-                        getStatus(record);
+                        getStatus(
+                          record
+                        );
 
                       return (
                         <tr
@@ -604,9 +775,10 @@ function Attendance({ onBack }) {
                             record
                           )}-${selectedDate}`}
                         >
-
                           <td>
-                            {selectedDate}
+                            {
+                              selectedDate
+                            }
                           </td>
 
                           <td>
@@ -676,26 +848,30 @@ function Attendance({ onBack }) {
 
                               <button
                                 type="button"
-                                title="View"
+                                title="View Attendance"
                                 onClick={() =>
                                   setViewRecord(
                                     record
                                   )
                                 }
                               >
-                                <Eye size={16} />
+                                <Eye
+                                  size={16}
+                                />
                               </button>
 
                               <button
                                 type="button"
-                                title="Edit"
+                                title="Edit Attendance"
                                 onClick={() =>
                                   openEdit(
                                     record
                                   )
                                 }
                               >
-                                <Pencil size={16} />
+                                <Pencil
+                                  size={16}
+                                />
                               </button>
 
                             </div>
@@ -739,7 +915,9 @@ function Attendance({ onBack }) {
               <button
                 type="button"
                 onClick={() =>
-                  setViewRecord(null)
+                  setViewRecord(
+                    null
+                  )
                 }
               >
                 <X size={19} />
@@ -750,7 +928,10 @@ function Attendance({ onBack }) {
             <div className="details-grid">
 
               <div>
-                <span>Employee ID</span>
+                <span>
+                  Employee ID
+                </span>
+
                 <strong>
                   {getEmployeeId(
                     viewRecord
@@ -759,7 +940,10 @@ function Attendance({ onBack }) {
               </div>
 
               <div>
-                <span>Employee Name</span>
+                <span>
+                  Employee Name
+                </span>
+
                 <strong>
                   {getEmployeeName(
                     viewRecord
@@ -768,49 +952,67 @@ function Attendance({ onBack }) {
               </div>
 
               <div>
-                <span>Department</span>
+                <span>
+                  Department
+                </span>
+
                 <strong>
-                  {viewRecord.department_name ||
+                  {viewRecord?.department_name ||
                     "--"}
                 </strong>
               </div>
 
               <div>
-                <span>Date</span>
+                <span>
+                  Date
+                </span>
+
                 <strong>
                   {selectedDate}
                 </strong>
               </div>
 
               <div>
-                <span>Check-in</span>
+                <span>
+                  Check-in
+                </span>
+
                 <strong>
                   {formatTime(
-                    viewRecord.check_in
+                    viewRecord?.check_in
                   )}
                 </strong>
               </div>
 
               <div>
-                <span>Check-out</span>
+                <span>
+                  Check-out
+                </span>
+
                 <strong>
                   {formatTime(
-                    viewRecord.check_out
+                    viewRecord?.check_out
                   )}
                 </strong>
               </div>
 
               <div>
-                <span>Working Hours</span>
+                <span>
+                  Working Hours
+                </span>
+
                 <strong>
                   {formatHours(
-                    viewRecord.working_hours
+                    viewRecord?.working_hours
                   )}
                 </strong>
               </div>
 
               <div>
-                <span>Status</span>
+                <span>
+                  Status
+                </span>
+
                 <strong>
                   {getStatus(
                     viewRecord
@@ -823,9 +1025,12 @@ function Attendance({ onBack }) {
             <div className="modal-footer">
 
               <button
+                type="button"
                 className="cancel-modal"
                 onClick={() =>
-                  setViewRecord(null)
+                  setViewRecord(
+                    null
+                  )
                 }
               >
                 Close
@@ -841,7 +1046,7 @@ function Attendance({ onBack }) {
       {editRecord && (
         <div className="modal-overlay">
 
-          <div className="attendance-modal">
+          <div className="attendance-modal edit-attendance-modal">
 
             <div className="modal-header">
 
@@ -851,17 +1056,17 @@ function Attendance({ onBack }) {
                 </h2>
 
                 <p>
-                  Regularisation for{" "}
-                  {getEmployeeName(
-                    editRecord
-                  )}
+                  Regularise attendance
+                  record
                 </p>
               </div>
 
               <button
                 type="button"
                 onClick={() =>
-                  setEditRecord(null)
+                  setEditRecord(
+                    null
+                  )
                 }
               >
                 <X size={19} />
@@ -871,8 +1076,67 @@ function Attendance({ onBack }) {
 
             <div className="edit-form">
 
-              <label>
-                Check-in
+              <div className="edit-field">
+                <label>
+                  Date
+                </label>
+
+                <input
+                  type="date"
+                  value={
+                    selectedDate
+                  }
+                  readOnly
+                />
+              </div>
+
+              <div className="edit-field">
+                <label>
+                  Employee ID
+                </label>
+
+                <input
+                  type="text"
+                  value={getEmployeeId(
+                    editRecord
+                  )}
+                  readOnly
+                />
+              </div>
+
+              <div className="edit-field">
+                <label>
+                  Employee Name
+                </label>
+
+                <input
+                  type="text"
+                  value={getEmployeeName(
+                    editRecord
+                  )}
+                  readOnly
+                />
+              </div>
+
+              <div className="edit-field">
+                <label>
+                  Department
+                </label>
+
+                <input
+                  type="text"
+                  value={
+                    editRecord?.department_name ||
+                    "--"
+                  }
+                  readOnly
+                />
+              </div>
+
+              <div className="edit-field">
+                <label>
+                  Check-in
+                </label>
 
                 <input
                   type="datetime-local"
@@ -887,11 +1151,12 @@ function Attendance({ onBack }) {
                     })
                   }
                 />
+              </div>
 
-              </label>
-
-              <label>
-                Check-out
+              <div className="edit-field">
+                <label>
+                  Check-out
+                </label>
 
                 <input
                   type="datetime-local"
@@ -906,17 +1171,53 @@ function Attendance({ onBack }) {
                     })
                   }
                 />
+              </div>
 
-              </label>
+              <div className="edit-field">
+                <label>
+                  Status
+                </label>
 
-              <label>
-                Reason
+                <select
+                  value={
+                    editForm.status
+                  }
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      status:
+                        e.target.value,
+                    })
+                  }
+                >
+                  <option value="Present">
+                    Present
+                  </option>
+
+                  <option value="Absent">
+                    Absent
+                  </option>
+
+                  <option value="Late">
+                    Late
+                  </option>
+
+                  <option value="Half Day">
+                    Half Day
+                  </option>
+                </select>
+              </div>
+
+              <div className="edit-field edit-field-full">
+                <label>
+                  Reason
+                </label>
 
                 <textarea
                   value={
                     editForm.reason
                   }
-                  placeholder="Enter reason"
+                  placeholder="Enter reason for attendance regularisation"
                   onChange={(e) =>
                     setEditForm({
                       ...editForm,
@@ -925,23 +1226,26 @@ function Attendance({ onBack }) {
                     })
                   }
                 />
-
-              </label>
+              </div>
 
             </div>
 
             <div className="modal-footer">
 
               <button
+                type="button"
                 className="cancel-modal"
                 onClick={() =>
-                  setEditRecord(null)
+                  setEditRecord(
+                    null
+                  )
                 }
               >
                 Cancel
               </button>
 
               <button
+                type="button"
                 className="save-modal"
                 onClick={
                   saveCorrection
@@ -959,6 +1263,71 @@ function Attendance({ onBack }) {
       )}
 
     </div>
+  );
+}
+
+function UsersIcon() {
+  return (
+    <svg
+      width="19"
+      height="19"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
+
+function PresentIcon() {
+  return (
+    <svg
+      width="19"
+      height="19"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+function AbsentIcon() {
+  return (
+    <svg
+      width="19"
+      height="19"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path d="M6 6l12 12" />
+      <path d="M18 6 6 18" />
+    </svg>
+  );
+}
+
+function LateIcon() {
+  return (
+    <svg
+      width="19"
+      height="19"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
   );
 }
 
