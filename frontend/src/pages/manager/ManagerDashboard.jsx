@@ -24,6 +24,7 @@ import { api } from "../../services/api";
 import ManagerSidebar from "../../components/manager/ManagerSidebar";
 import ManagerHeader from "../../components/manager/ManagerHeader";
 import Profile from "../profile/Profile";
+
 function ManagerDashboard({ onNavigate, onLogout }) {
   const [dashboard, setDashboard] = useState(null);
   const [attendance, setAttendance] = useState(null);
@@ -43,23 +44,25 @@ function ManagerDashboard({ onNavigate, onLogout }) {
       setError("");
 
       const response = await api.get("/dashboard/manager");
-      const data = response?.data || response;
 
-      if (data) {
-        setDashboard(data);
+      if (response?.success) {
+        setDashboard(response.data || {
+          manager: {},
+          team: [],
+          teamStats: { totalMembers: 0, activeMembers: 0, presentToday: 0, absentToday: 0, lateToday: 0, newJoiners: 0 },
+          monthlyStats: { present: 0, absent: 0, half: 0, late: 0 },
+          pendingApprovals: { corrections: 0, overtime: 0, total: 0 }
+        });
+        setError("");
       } else {
-        setError("Unable to load dashboard data.");
+        setError(response?.message || "Unable to load dashboard data.");
+        setDashboard(null);
       }
     } catch (err) {
       console.error("Manager dashboard error:", err);
-
-      const message =
-        err?.response?.data?.detail ||
-        err?.response?.data?.message ||
-        err?.message ||
-        "Unable to load manager dashboard.";
-
+      const message = err?.response?.data?.detail || err?.response?.data?.message || err?.message || "Unable to load manager dashboard.";
       setError(message);
+      setDashboard(null);
     } finally {
       setLoading(false);
     }
@@ -72,19 +75,55 @@ function ManagerDashboard({ onNavigate, onLogout }) {
     try {
       setAttendanceError("");
 
-      const response = await api.get("/attendance/today");
-      const data = response?.data || response;
+      const response = await api.get("/attendance/daily");
 
-      setAttendance(data || null);
+      if (response?.success && response?.data) {
+        const attendanceData = Array.isArray(response.data) 
+          ? response.data[0] 
+          : response.data;
+        
+        setAttendance(attendanceData || {
+          check_in: null,
+          check_out: null,
+          status: 'Not Checked In',
+          working_hours: 0,
+          is_late: false,
+          is_early_checkout: false,
+          is_half_day: false,
+          late_minutes: 0,
+          early_checkout_minutes: 0,
+          overtime_hours: 0
+        });
+      } else {
+        setAttendance({
+          check_in: null,
+          check_out: null,
+          status: 'Not Checked In',
+          working_hours: 0,
+          is_late: false,
+          is_early_checkout: false,
+          is_half_day: false,
+          late_minutes: 0,
+          early_checkout_minutes: 0,
+          overtime_hours: 0
+        });
+      }
     } catch (err) {
       console.error("Attendance error:", err);
-
-      const message =
-        err?.response?.data?.detail ||
-        err?.response?.data?.message ||
-        "";
-
+      const message = err?.response?.data?.detail || err?.response?.data?.message || "";
       setAttendanceError(message);
+      setAttendance({
+        check_in: null,
+        check_out: null,
+        status: 'Not Checked In',
+        working_hours: 0,
+        is_late: false,
+        is_early_checkout: false,
+        is_half_day: false,
+        late_minutes: 0,
+        early_checkout_minutes: 0,
+        overtime_hours: 0
+      });
     }
   };
 
@@ -92,6 +131,27 @@ function ManagerDashboard({ onNavigate, onLogout }) {
     fetchDashboard();
     fetchAttendance();
   }, []);
+
+  /* =========================================================
+     FORMAT TIME - IST FIX
+  ========================================================= */
+  const formatTime = (value) => {
+    if (!value) return "--:--";
+    try {
+      const date = new Date(value);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleTimeString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+          timeZone: "Asia/Kolkata"
+        });
+      }
+      return value;
+    } catch (e) {
+      return value;
+    }
+  };
 
   /* =========================================================
      DASHBOARD DATA
@@ -156,10 +216,8 @@ function ManagerDashboard({ onNavigate, onLogout }) {
         "/attendance/check-in"
       );
 
-      const data = response?.data || response;
-
-      setAttendance(data);
       await fetchDashboard();
+      await fetchAttendance();
     } catch (err) {
       console.error("Check-in error:", err);
 
@@ -169,6 +227,7 @@ function ManagerDashboard({ onNavigate, onLogout }) {
         "Unable to check in.";
 
       setAttendanceError(message);
+      await fetchAttendance();
     } finally {
       setAttendanceLoading(false);
     }
@@ -186,10 +245,8 @@ function ManagerDashboard({ onNavigate, onLogout }) {
         "/attendance/check-out"
       );
 
-      const data = response?.data || response;
-
-      setAttendance(data);
       await fetchDashboard();
+      await fetchAttendance();
     } catch (err) {
       console.error("Check-out error:", err);
 
@@ -199,6 +256,7 @@ function ManagerDashboard({ onNavigate, onLogout }) {
         "Unable to check out.";
 
       setAttendanceError(message);
+      await fetchAttendance();
     } finally {
       setAttendanceLoading(false);
     }
@@ -261,14 +319,7 @@ function ManagerDashboard({ onNavigate, onLogout }) {
       return "Not Checked In";
     }
 
-    if (attendance?.status) {
-      return attendance.status;
-    }
-
-    if (
-      attendance?.check_in &&
-      attendance?.check_out
-    ) {
+    if (attendance?.check_in && attendance?.check_out) {
       return "Completed";
     }
 
@@ -320,14 +371,14 @@ function ManagerDashboard({ onNavigate, onLogout }) {
           <div>
             <span>Check In</span>
             <strong>
-              {attendance?.check_in || "--:--"}
+              {attendance?.check_in ? formatTime(attendance.check_in) : "--:--"}
             </strong>
           </div>
 
           <div>
             <span>Check Out</span>
             <strong>
-              {attendance?.check_out || "--:--"}
+              {attendance?.check_out ? formatTime(attendance.check_out) : "--:--"}
             </strong>
           </div>
 
@@ -551,8 +602,7 @@ function ManagerDashboard({ onNavigate, onLogout }) {
               <div className="manager-progress-track">
                 <span
                   style={{
-                    width: `${
-                      teamStats?.totalMembers
+                    width: `${teamStats?.totalMembers
                         ? Math.min(
                             100,
                             ((teamStats?.presentToday ||
@@ -1152,9 +1202,7 @@ function ManagerDashboard({ onNavigate, onLogout }) {
                 <div className="manager-report-track">
                   <span
                     style={{
-                      width: `${
-                        (value / maxValue) * 100
-                      }%`,
+                      width: `${(value / maxValue) * 100}%`,
                     }}
                   />
                 </div>

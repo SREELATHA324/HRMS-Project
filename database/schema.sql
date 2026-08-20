@@ -322,8 +322,100 @@ CREATE TABLE overtime_records (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+//leave management module schemas
+
+CREATE TABLE leave_types (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    code VARCHAR(20) NOT NULL UNIQUE,
+    description TEXT,
+    color VARCHAR(20) DEFAULT '#6366c1',
+    is_paid BOOLEAN DEFAULT TRUE,
+    is_carry_forward BOOLEAN DEFAULT FALSE,
+    max_days_per_year INTEGER,
+    max_continuous_days INTEGER,
+    requires_approval BOOLEAN DEFAULT TRUE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE leave_policies (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    department_id BIGINT REFERENCES departments(id) ON DELETE CASCADE,
+    employment_type VARCHAR(50),
+    total_days INTEGER NOT NULL,
+    carry_forward_limit INTEGER DEFAULT 0,
+    probation_days INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE leave_allocations (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+    leave_type_id BIGINT NOT NULL REFERENCES leave_types(id) ON DELETE CASCADE,
+    year INTEGER NOT NULL,
+    total_days DECIMAL(5,2) NOT NULL,
+    used_days DECIMAL(5,2) DEFAULT 0,
+    carried_from_previous DECIMAL(5,2) DEFAULT 0,
+    status VARCHAR(30) DEFAULT 'Active',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_employee_leave_year UNIQUE(employee_id, leave_type_id, year)
+);
+
+CREATE TABLE leave_requests (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+    leave_type_id BIGINT NOT NULL REFERENCES leave_types(id) ON DELETE CASCADE,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    total_days DECIMAL(5,2) NOT NULL,
+    reason TEXT,
+    status VARCHAR(30) DEFAULT 'Pending',
+    applied_date TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    approved_by BIGINT REFERENCES employees(id) ON DELETE SET NULL,
+    approved_date TIMESTAMPTZ,
+    rejected_by BIGINT REFERENCES employees(id) ON DELETE SET NULL,
+    rejected_date TIMESTAMPTZ,
+    rejection_reason TEXT,
+    cancelled_by BIGINT REFERENCES employees(id) ON DELETE SET NULL,
+    cancelled_date TIMESTAMPTZ,
+    attachments TEXT[],
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    deleted_at TIMESTAMPTZ
+);
 
 
+CREATE TABLE leave_history (
+    id BIGSERIAL PRIMARY KEY,
+    leave_request_id BIGINT REFERENCES leave_requests(id) ON DELETE CASCADE,
+    employee_id BIGINT NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+    action VARCHAR(50) NOT NULL,
+    old_status VARCHAR(30),
+    new_status VARCHAR(30),
+    remarks TEXT,
+    performed_by BIGINT REFERENCES employees(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE leave_balances (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
+    leave_type_id BIGINT NOT NULL REFERENCES leave_types(id) ON DELETE CASCADE,
+    year INTEGER NOT NULL,
+    opening_balance DECIMAL(5,2) DEFAULT 0,
+    earned_balance DECIMAL(5,2) DEFAULT 0,
+    used_balance DECIMAL(5,2) DEFAULT 0,
+    closing_balance DECIMAL(5,2) DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_employee_leave_balance UNIQUE(employee_id, leave_type_id, year)
+);
 
 
 CREATE INDEX idx_employees_userId
@@ -403,3 +495,26 @@ CREATE INDEX idx_attendance_corrections_status ON attendance_corrections(status)
 CREATE INDEX idx_overtime_records_employee_id ON overtime_records(employee_id);
 CREATE INDEX idx_overtime_records_attendance_id ON overtime_records(attendance_id);
 CREATE INDEX idx_overtime_records_status ON overtime_records(status);
+
+//leave indexes
+
+CREATE INDEX idx_leave_requests_employee_id ON leave_requests(employee_id);
+CREATE INDEX idx_leave_requests_leave_type_id ON leave_requests(leave_type_id);
+CREATE INDEX idx_leave_requests_status ON leave_requests(status);
+CREATE INDEX idx_leave_requests_start_date ON leave_requests(start_date);
+CREATE INDEX idx_leave_requests_end_date ON leave_requests(end_date);
+CREATE INDEX idx_leave_requests_applied_date ON leave_requests(applied_date);
+CREATE INDEX idx_leave_requests_deleted_at ON leave_requests(deleted_at);
+
+CREATE INDEX idx_leave_allocations_employee_id ON leave_allocations(employee_id);
+CREATE INDEX idx_leave_allocations_leave_type_id ON leave_allocations(leave_type_id);
+CREATE INDEX idx_leave_allocations_year ON leave_allocations(year);
+
+CREATE INDEX idx_leave_balances_employee_id ON leave_balances(employee_id);
+CREATE INDEX idx_leave_balances_leave_type_id ON leave_balances(leave_type_id);
+CREATE INDEX idx_leave_balances_year ON leave_balances(year);
+
+CREATE INDEX idx_leave_history_leave_request_id ON leave_history(leave_request_id);
+CREATE INDEX idx_leave_history_employee_id ON leave_history(employee_id);
+
+CREATE INDEX idx_leave_policies_department_id ON leave_policies(department_id);
