@@ -32,7 +32,26 @@ async function employeeDashboard(req, res) {
             [employee.id, todayStr]
         );
 
-        const todayAttendance = attendanceResult.rows[0] || null;
+        let todayAttendance = {
+            check_in: null,
+            check_out: null,
+            status: 'Not Checked In',
+            working_hours: 0,
+            is_late: false,
+            is_half_day: false
+        };
+
+        if (attendanceResult.rows.length > 0) {
+            const record = attendanceResult.rows[0];
+            todayAttendance = {
+                check_in: record.check_in || null,
+                check_out: record.check_out || null,
+                status: record.status || 'Not Checked In',
+                working_hours: parseFloat(record.working_hours) || 0,
+                is_late: record.is_late || false,
+                is_half_day: record.is_half_day || false
+            };
+        }
 
         const monthStart = new Date();
         monthStart.setDate(1);
@@ -67,13 +86,69 @@ async function employeeDashboard(req, res) {
 
         const pendingCorrections = parseInt(correctionsResult.rows[0]?.pending_corrections) || 0;
 
-        const leaveBalance = {
-            annual: 18,
-            sick: 12,
-            casual: 10
+        // ✅ FIX: Wrap leave queries in try-catch
+        let leaveBalance = {
+            totalAvailable: 0,
+            totalUsed: 0,
+            pendingLeaves: 0,
+            leaveTypes: {}
         };
 
-        
+        try {
+            const currentYear = new Date().getFullYear();
+            const leaveBalanceResult = await pool.query(
+                `SELECT 
+                    lt.id,
+                    lt.name as leave_type_name,
+                    lt.code as leave_type_code,
+                    COALESCE(lb.closing_balance, 0) as closing_balance,
+                    COALESCE(lb.used_balance, 0) as used_balance
+                 FROM leave_types lt
+                 LEFT JOIN leave_balances lb ON lt.id = lb.leave_type_id 
+                    AND lb.employee_id = $1 AND lb.year = $2
+                 WHERE lt.is_active = true
+                 ORDER BY lt.name`,
+                [employee.id, currentYear]
+            );
+
+            let totalAvailable = 0;
+            let totalUsed = 0;
+            const leaveTypes = {};
+            
+            leaveBalanceResult.rows.forEach(row => {
+                const closing = parseFloat(row.closing_balance) || 0;
+                const used = parseFloat(row.used_balance) || 0;
+                totalAvailable += closing;
+                totalUsed += used;
+                
+                const key = row.code.toLowerCase();
+                leaveTypes[key] = {
+                    total: closing,
+                    used: used,
+                    available: closing
+                };
+            });
+
+            leaveBalance = {
+                totalAvailable: totalAvailable,
+                totalUsed: totalUsed,
+                pendingLeaves: 0,
+                leaveTypes: leaveTypes
+            };
+
+            const pendingLeavesResult = await pool.query(
+                `SELECT COUNT(*) as pending_leaves
+                 FROM leave_requests
+                 WHERE employee_id = $1 AND status = 'Pending' AND deleted_at IS NULL`,
+                [employee.id]
+            );
+            const pendingLeaves = parseInt(pendingLeavesResult.rows[0]?.pending_leaves) || 0;
+            leaveBalance.pendingLeaves = pendingLeaves;
+
+        } catch (leaveErr) {
+            console.log('Leave module not fully set up yet');
+        }
+
         let lengthOfService = '';
         if (employee.joiningDate) {
             const joinDate = new Date(employee.joiningDate);

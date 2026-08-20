@@ -16,6 +16,7 @@ import StatCard from "../../components/admin/StatCard";
 import Profile from "../profile/Profile";
 import { api } from "../../services/api";
 import EmployeeAttendance from "./EmployeeAttendance";
+
 function EmployeeDashboard({ onNavigate, onLogout }) {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -208,30 +209,29 @@ function EmployeeDashboard({ onNavigate, onLogout }) {
     sickLeave +
     casualLeave;
 
+  /* =========================================================
+     FORMAT TIME - IST FIX
+  ========================================================= */
+
   const formatTime = (value) => {
-  if (!value) return "--:--";
+    if (!value) return "--:--";
 
-  // Already a time like 09:30:00
-  if (
-    typeof value === "string" &&
-    /^\d{2}:\d{2}/.test(value)
-  ) {
-    return value.slice(0, 5);
-  }
+    if (typeof value === "string" && /^\d{2}:\d{2}/.test(value)) {
+      return value.slice(0, 5);
+    }
 
-  // ISO date/time from PostgreSQL
-  const date = new Date(value);
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleTimeString("en-IN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+        timeZone: "Asia/Kolkata"
+      });
+    }
+    return String(value);
+  };
 
-  if (!Number.isNaN(date.getTime())) {
-    return date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  }
-
-  return String(value);
-};
   /* =========================================================
      ATTENDANCE VALUES
   ========================================================= */
@@ -241,27 +241,27 @@ function EmployeeDashboard({ onNavigate, onLogout }) {
     "Not Checked In";
 
   const rawCheckIn =
-  todayAttendance?.check_in ||
-  todayAttendance?.checkIn ||
-  null;
+    todayAttendance?.check_in ||
+    todayAttendance?.checkIn ||
+    null;
 
-const rawCheckOut =
-  todayAttendance?.check_out ||
-  todayAttendance?.checkOut ||
-  null;
+  const rawCheckOut =
+    todayAttendance?.check_out ||
+    todayAttendance?.checkOut ||
+    null;
 
-const checkIn = formatTime(rawCheckIn);
+  const checkIn = formatTime(rawCheckIn);
 
-const checkOut = formatTime(rawCheckOut);
+  const checkOut = formatTime(rawCheckOut);
 
-const workingHours =
-  todayAttendance?.working_hours ??
-  todayAttendance?.workingHours ??
-  "00h 00m";
+  const workingHours =
+    todayAttendance?.working_hours ??
+    todayAttendance?.workingHours ??
+    "00h 00m";
 
-const hasCheckedIn = Boolean(rawCheckIn);
+  const hasCheckedIn = Boolean(rawCheckIn);
 
-const hasCheckedOut = Boolean(rawCheckOut);
+  const hasCheckedOut = Boolean(rawCheckOut);
 
   /* =========================================================
      NAVIGATION
@@ -384,6 +384,8 @@ const hasCheckedOut = Boolean(rawCheckOut);
           {activePage === "profile" ? (
             <Profile />
           ) : activePage === "attendance" ? (
+            <EmployeeAttendance />
+          ) : (
           <EmployeeAttendance />
         ) : (
             <>

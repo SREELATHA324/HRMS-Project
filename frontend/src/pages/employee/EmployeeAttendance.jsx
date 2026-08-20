@@ -106,22 +106,18 @@ function EmployeeAttendance({ onNavigate, onLogout }) {
   };
 
   const formatTime = (dateTimeValue) => {
-    if (!dateTimeValue) {
-      return "--:--";
-    }
-
-    const date = new Date(dateTimeValue);
-
-    if (Number.isNaN(date.getTime())) {
-      return "--:--";
-    }
-
-    return date.toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
+  if (!dateTimeValue) return "--:--";
+  const date = new Date(dateTimeValue);
+  if (Number.isNaN(date.getTime())) return "--:--";
+  
+  
+  return date.toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Kolkata"
+  });
+};
 
   const getMonthDateRange = (year, month) => {
     const firstDay = new Date(year, month - 1, 1);

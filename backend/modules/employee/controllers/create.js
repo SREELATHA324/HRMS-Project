@@ -37,6 +37,48 @@ async function getRoleIdByName(roleName) {
     }
 }
 
+
+async function createLeaveBalancesForEmployee(employeeId) {
+    try {
+        const leaveTypes = await pool.query(
+            'SELECT * FROM leave_types WHERE is_active = true'
+        );
+
+        if (leaveTypes.rows.length === 0) {
+            console.log(' No leave types found. Please insert leave types first.');
+            return;
+        }
+
+        const currentYear = new Date().getFullYear();
+
+        for (const lt of leaveTypes.rows) {
+            const defaultDays = lt.max_days_per_year || 0;
+
+            await pool.query(
+                `INSERT INTO leave_balances (
+                    employee_id, 
+                    leave_type_id, 
+                    year, 
+                    opening_balance, 
+                    closing_balance,
+                    created_at,
+                    updated_at
+                ) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                ON CONFLICT (employee_id, leave_type_id, year) 
+                DO UPDATE SET 
+                    opening_balance = EXCLUDED.opening_balance,
+                    closing_balance = EXCLUDED.closing_balance,
+                    updated_at = CURRENT_TIMESTAMP`,
+                [employeeId, lt.id, currentYear, defaultDays, defaultDays]
+            );
+        }
+
+        console.log(`leave balances created for employee ${employeeId}`);
+    } catch (error) {
+        console.error('Error creating leave balances:', error);
+    }
+}
+
 async function createEmployee(req, res) {
     const {
         employeeCode, firstName, lastName, email, phone,
@@ -91,7 +133,6 @@ async function createEmployee(req, res) {
         }
 
         const finalStatus = status || 'Active';
-        const finalRole = role || 'employee';
         const finalJobLocation = jobLocation || 'onsite';
         const finalEmploymentType = employmentType || 'Full-time';
 
@@ -100,16 +141,15 @@ async function createEmployee(req, res) {
                 "userId", "employeeCode", "firstName", "lastName", email, phone,
                 "dateOfBirth", gender, address, city, state, country,
                 pincode, "departmentId", "designationId", "reportingManagerId",
-                "joiningDate", "employmentType", status, role, "jobLocation"
+                "joiningDate", "employmentType", status, "jobLocation"
             ) VALUES ($1, $2, $3, $4, $5, $6, 
                       $7, $8, $9, $10, $11, $12,
-                      $13, $14, $15, $16, $17, $18, $19, $20, $21)
+                      $13, $14, $15, $16, $17, $18, $19, $20)
              RETURNING *`,
             [userId, finalEmployeeCode, firstName, lastName || '', email, phone || '',
              dateOfBirth || null, gender || null, address || '', city || '', state || '', country || '',
              pincode || '', departmentId || null, designationId || null, reportingManagerId || null,
-             joiningDate || new Date(), finalEmploymentType, finalStatus,
-             finalRole, finalJobLocation]
+             joiningDate || new Date(), finalEmploymentType, finalStatus, finalJobLocation]
         );
 
         await pool.query(
@@ -118,11 +158,14 @@ async function createEmployee(req, res) {
             [result.rows[0].id, 'Created', 'New', JSON.stringify(result.rows[0]), new Date(), 'Employee created with user account']
         );
 
+        
+        await createLeaveBalancesForEmployee(result.rows[0].id);
+
         res.status(201).json({
             success: true,
             message: isNewUser
-                ? 'Employee created successfully. Welcome email sent with login credentials.'
-                : 'Employee created successfully and linked to existing user',
+                ? 'Employee created successfully. Welcome email sent with login credentials. Leave balances auto-created.'
+                : 'Employee created successfully and linked to existing user. Leave balances auto-created.',
             data: result.rows[0]
         });
 
