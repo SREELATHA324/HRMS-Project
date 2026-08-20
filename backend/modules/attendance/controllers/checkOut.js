@@ -47,7 +47,8 @@ async function checkOut(req, res) {
 
         const attendance = attendanceRes.rows[0];
 
-        if (attendance.check_out) {
+        // ✅ FIXED: Check if check_out is NOT NULL
+        if (attendance.check_out !== null && attendance.check_out !== undefined) {
             client.release();
             return res.status(409).json({
                 success: false,

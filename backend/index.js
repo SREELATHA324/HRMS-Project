@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const pool = require('./db');
+const { testConnection } = require('./db');
 
 const app = express();
 
@@ -19,6 +20,7 @@ const authRoutes = require('./modules/authentication/routes');
 const employeeRoutes = require('./modules/employee/routes');
 const dashboardRoutes = require('./modules/dashboard/routes');
 const attendanceRoutes = require('./modules/attendance/routes');
+const leaveRoutes = require('./modules/leave/routes');
 
 app.get('/health', async (req, res) => {
     try {
@@ -45,6 +47,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/leave', leaveRoutes);
 
 app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);
@@ -61,11 +64,23 @@ app.use((req, res) => {
     });
 });
 
-const PORT = process.env.PORT || 5000;
+async function startServer() {
+    console.log('Checking database connection...');
+    
+    const dbConnected = await testConnection();
+    
+    if (!dbConnected) {
+        console.log('Warning: Database connection failed. Please check .env file.');
+        console.log('Starting server anyway...');
+    }
+    
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+        console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+}
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+startServer();
 
 module.exports = app;
