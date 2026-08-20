@@ -92,18 +92,32 @@ function validateRule(req, res, next) {
 }
 
 function validateCorrection(req, res, next) {
-    const { reason, requested_check_in, requested_check_out } = req.body;
+    const { attendance_id, date, requested_check_in, requested_check_out, reason } = req.body;
     const errors = [];
 
-    if (!reason) {
-        errors.push('Reason is required');
+    if (!attendance_id && !date) {
+        errors.push('Either attendance_id or date is required');
     }
 
-    if (requested_check_in && isNaN(Date.parse(requested_check_in))) {
-        errors.push('Requested check-in must be a valid ISO date-time string');
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (date && !dateRegex.test(date)) {
+        errors.push('Date must be in YYYY-MM-DD format');
     }
-    if (requested_check_out && isNaN(Date.parse(requested_check_out))) {
-        errors.push('Requested check-out must be a valid ISO date-time string');
+
+    if (!requested_check_in && !requested_check_out) {
+        errors.push('At least one of requested_check_in or requested_check_out is required');
+    }
+
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)(:([0-5]\d))?$/;
+    if (requested_check_in && !timeRegex.test(requested_check_in)) {
+        errors.push('Requested check-in must be in HH:MM or HH:MM:SS format');
+    }
+    if (requested_check_out && !timeRegex.test(requested_check_out)) {
+        errors.push('Requested check-out must be in HH:MM or HH:MM:SS format');
+    }
+
+    if (!reason || reason.trim().length < 3) {
+        errors.push('Reason is required and must be at least 3 characters');
     }
 
     if (errors.length > 0) {

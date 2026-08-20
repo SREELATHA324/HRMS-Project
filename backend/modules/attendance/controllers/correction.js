@@ -126,9 +126,11 @@ async function requestCorrection(req, res) {
         await client.query('ROLLBACK');
         client.release();
         console.error('Request correction error:', error);
+        console.error('Error stack:', error.stack);
         res.status(500).json({
             success: false,
-            message: 'Internal server error'
+            message: 'Internal server error',
+            error: error.message
         });
     }
 }
