@@ -384,8 +384,8 @@ const hasCheckedOut = Boolean(rawCheckOut);
           {activePage === "profile" ? (
             <Profile />
           ) : activePage === "attendance" ? (
-  <EmployeeAttendance />
-) : (
+          <EmployeeAttendance />
+        ) : (
             <>
               {/* =============================================
                   PAGE HEADING

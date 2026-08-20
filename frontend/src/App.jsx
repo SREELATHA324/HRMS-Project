@@ -22,6 +22,7 @@ import ManagerDashboard from "./pages/manager/ManagerDashboard";
 import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
 import EmployeeAttendance from "./pages/employee/EmployeeAttendance";
 import EmployeeAttendanceCorrection from "./pages/employee/EmployeeAttendanceCorrection";
+import EmployeeLeaves from "./pages/employee/EmployeeLeaves";
 function App() {
   /* =========================================================
      GET CURRENT PAGE FROM URL HASH
@@ -146,6 +147,7 @@ function App() {
       employeeDashboard: "employee/dashboard",
       employeeAttendance: "employee/attendance",
       employeeAttendanceCorrection: `employee/attendance/correction/${value}`,
+      employeeLeaves: "employee/leaves",
     };
 
     const hash = hashMap[pageName];
@@ -417,17 +419,23 @@ function App() {
       )}
 
       {page === "employeeAttendance" && (
-  <EmployeeAttendance
-    onNavigate={navigate}
-    onLogout={handleLogout}
-  />
-)}
+        <EmployeeAttendance
+          onNavigate={navigate}
+          onLogout={handleLogout}
+        />
+      )}
       {page === "employeeAttendanceCorrection" && (
-  <EmployeeAttendanceCorrection
-    onNavigate={navigate}
-    onLogout={handleLogout}
-  />
-)}
+        <EmployeeAttendanceCorrection
+          onNavigate={navigate}
+          onLogout={handleLogout}
+        />
+      )}
+      {page === "employeeLeaves" && (
+        <EmployeeLeaves
+          onNavigate={navigate}
+          onLogout={handleLogout}
+        />
+      )}
     </>
   );
 }
