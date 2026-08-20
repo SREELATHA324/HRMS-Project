@@ -154,6 +154,25 @@ function ManagerDashboard({ onNavigate, onLogout }) {
   };
 
   /* =========================================================
+     FORMAT WORKING HOURS - ADDED FIX
+  ========================================================= */
+  const formatWorkingHours = (value) => {
+    if (value === null || value === undefined || value === "") {
+      return "0h 00m";
+    }
+
+    const hours = Number(value);
+    if (Number.isNaN(hours) || hours <= 0) {
+      return "0h 00m";
+    }
+
+    const wholeHours = Math.floor(hours);
+    const minutes = Math.round((hours - wholeHours) * 60);
+
+    return `${wholeHours}h ${String(minutes).padStart(2, "0")}m`;
+  };
+
+  /* =========================================================
      DASHBOARD DATA
   ========================================================= */
   const manager = dashboard?.manager || {};
@@ -385,7 +404,7 @@ function ManagerDashboard({ onNavigate, onLogout }) {
           <div>
             <span>Working Hours</span>
             <strong>
-              {attendance?.working_hours || "0h 0m"}
+              {formatWorkingHours(attendance?.working_hours)}
             </strong>
           </div>
         </div>
@@ -440,6 +459,13 @@ function ManagerDashboard({ onNavigate, onLogout }) {
      DASHBOARD PAGE
   ========================================================= */
   const renderDashboard = () => {
+    // Calculate team attendance percentage
+    const totalMembers = teamStats?.totalMembers || 0;
+    const presentToday = teamStats?.presentToday || 0;
+    const attendancePercent = totalMembers > 0 
+      ? Math.round((presentToday / totalMembers) * 100) 
+      : 0;
+
     return (
       <>
         <div className="admin-page-heading">
@@ -588,30 +614,14 @@ function ManagerDashboard({ onNavigate, onLogout }) {
                 <span>Team Attendance</span>
 
                 <strong>
-                  {teamStats?.totalMembers
-                    ? Math.round(
-                        ((teamStats?.presentToday || 0) /
-                          teamStats.totalMembers) *
-                          100
-                      )
-                    : 0}
-                  %
+                  {attendancePercent}%
                 </strong>
               </div>
 
               <div className="manager-progress-track">
                 <span
                   style={{
-                    width: `${teamStats?.totalMembers
-                        ? Math.min(
-                            100,
-                            ((teamStats?.presentToday ||
-                              0) /
-                              teamStats.totalMembers) *
-                              100
-                          )
-                        : 0
-                    }%`,
+                    width: `${Math.min(attendancePercent, 100)}%`,
                   }}
                 />
               </div>
@@ -1154,13 +1164,8 @@ function ManagerDashboard({ onNavigate, onLogout }) {
       monthlyStats?.late || 0
     );
 
-    const maxValue = Math.max(
-      present,
-      absent,
-      half,
-      late,
-      1
-    );
+    const totalDays = present + absent + half + late;
+    const maxValue = totalDays > 0 ? totalDays : 1;
 
     return (
       <>

@@ -10,8 +10,7 @@ import {
   Loader2,
 } from "lucide-react";
 
-import EmployeeSidebar from "../../components/employee/EmployeeSidebar";
-import EmployeeHeader from "../../components/employee/EmployeeHeader";
+// REMOVED: EmployeeHeader import - it's already in EmployeeDashboard
 import StatCard from "../../components/admin/StatCard";
 import { api } from "../../services/api";
 
@@ -106,18 +105,17 @@ function EmployeeAttendance({ onNavigate, onLogout }) {
   };
 
   const formatTime = (dateTimeValue) => {
-  if (!dateTimeValue) return "--:--";
-  const date = new Date(dateTimeValue);
-  if (Number.isNaN(date.getTime())) return "--:--";
-  
-  
-  return date.toLocaleTimeString("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-    timeZone: "Asia/Kolkata"
-  });
-};
+    if (!dateTimeValue) return "--:--";
+    const date = new Date(dateTimeValue);
+    if (Number.isNaN(date.getTime())) return "--:--";
+    
+    return date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Kolkata"
+    });
+  };
 
   const getMonthDateRange = (year, month) => {
     const firstDay = new Date(year, month - 1, 1);
@@ -188,10 +186,8 @@ function EmployeeAttendance({ onNavigate, onLogout }) {
         absentDays: Number(monthlyData.absentDays || 0),
         halfDays: Number(monthlyData.halfDays || 0),
         lateArrivals: Number(monthlyData.lateArrivals || 0),
-        totalWorkingHours:
-          monthlyData.totalWorkingHours || 0,
-        attendancePercentage:
-          monthlyData.attendancePercentage || 0,
+        totalWorkingHours: Number(monthlyData.totalWorkingHours || 0),
+        attendancePercentage: Number(monthlyData.attendancePercentage || 0),
       });
 
       /*
@@ -283,244 +279,234 @@ function EmployeeAttendance({ onNavigate, onLogout }) {
     return options;
   };
 
+  const totalWorkingHoursDisplay = formatWorkingHours(monthlyStats.totalWorkingHours);
+
   return (
-    <div className="admin-layout">
-      <EmployeeSidebar
-        activePage="attendance"
-        onNavigate={handleNavigation}
-        onLogout={onLogout}
-      />
+    <div className="employee-attendance-content">
+      <div className="admin-dashboard-content employee-attendance-page">
+        {/* PAGE HEADING */}
 
-      <main className="admin-main">
-        <EmployeeHeader onNavigate={handleNavigation} />
+        <div className="admin-page-heading attendance-page-heading">
+          <div>
+            <h1>Attendance</h1>
 
-        <div className="admin-dashboard-content employee-attendance-page">
-          {/* PAGE HEADING */}
-
-          <div className="admin-page-heading attendance-page-heading">
-            <div>
-              <h1>Attendance</h1>
-
-              <p>
-                Track and manage your attendance records.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              className="attendance-correction-button"
-              onClick={() =>
-                handleNavigation("employeeAttendanceCorrection")
-              }
-            >
-              <FilePenLine size={17} />
-              Request Correction
-            </button>
+            <p>
+              Track and manage your attendance records.
+            </p>
           </div>
 
-          {/* ERROR */}
+          <button
+            type="button"
+            className="attendance-correction-button"
+            onClick={() =>
+              handleNavigation("employeeAttendanceCorrection")
+            }
+          >
+            <FilePenLine size={17} />
+            Request Correction
+          </button>
+        </div>
 
-          {error && (
-            <div className="attendance-error-message">
-              <CircleX size={18} />
-              <span>{error}</span>
-            </div>
-          )}
+        {/* ERROR */}
 
-          {/* SUMMARY CARDS */}
+        {error && (
+          <div className="attendance-error-message">
+            <CircleX size={18} />
+            <span>{error}</span>
+          </div>
+        )}
 
-          <section className="admin-stats-grid attendance-stats-grid">
-            <StatCard
-              title="Present Days"
-              value={
-                loading ? "..." : monthlyStats.presentDays
-              }
-              description="Days marked present"
-              icon={<CircleCheck size={20} />}
-            />
+        {/* SUMMARY CARDS */}
 
-            <StatCard
-              title="Absent Days"
-              value={
-                loading ? "..." : monthlyStats.absentDays
-              }
-              description="Days marked absent"
-              icon={<CircleX size={20} />}
-            />
+        <section className="admin-stats-grid attendance-stats-grid">
+          <StatCard
+            title="Present Days"
+            value={
+              loading ? "..." : monthlyStats.presentDays
+            }
+            description="Days marked present"
+            icon={<CircleCheck size={20} />}
+          />
 
-            <StatCard
-              title="Half Days"
-              value={
-                loading ? "..." : monthlyStats.halfDays
-              }
-              description="Half-day attendance"
-              icon={<AlertCircle size={20} />}
-            />
+          <StatCard
+            title="Absent Days"
+            value={
+              loading ? "..." : monthlyStats.absentDays
+            }
+            description="Days marked absent"
+            icon={<CircleX size={20} />}
+          />
 
-            <StatCard
-              title="Late Days"
-              value={
-                loading ? "..." : monthlyStats.lateArrivals
-              }
-              description="Late check-ins"
-              icon={<Clock3 size={20} />}
-            />
-          </section>
+          <StatCard
+            title="Half Days"
+            value={
+              loading ? "..." : monthlyStats.halfDays
+            }
+            description="Half-day attendance"
+            icon={<AlertCircle size={20} />}
+          />
 
-          {/* ATTENDANCE HISTORY */}
+          <StatCard
+            title="Late Days"
+            value={
+              loading ? "..." : monthlyStats.lateArrivals
+            }
+            description="Late check-ins"
+            icon={<Clock3 size={20} />}
+          />
+        </section>
 
-          <section className="admin-panel employee-attendance-panel">
-            <div className="employee-attendance-panel-header">
-              <div>
-                <h2>Attendance History</h2>
+        {/* ATTENDANCE HISTORY */}
 
-                <p>
-                  View your daily attendance records.
-                </p>
-              </div>
-
-              <div className="attendance-month-select-wrapper">
-                <CalendarDays size={17} />
-
-                <select
-                  value={selectedMonth}
-                  onChange={(event) =>
-                    setSelectedMonth(event.target.value)
-                  }
-                  className="attendance-month-select"
-                >
-                  {getMonthOptions().map((option) => (
-                    <option
-                      key={option.value}
-                      value={option.value}
-                    >
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-
-                <ChevronDown
-                  size={16}
-                  className="attendance-select-arrow"
-                />
-              </div>
-            </div>
-
-            <div className="attendance-working-summary">
-              <div>
-                <span>Total Working Hours</span>
-
-                <strong>
-                  {loading
-                    ? "Loading..."
-                    : formatWorkingHours(
-                        monthlyStats.totalWorkingHours
-                      )}
-                </strong>
-              </div>
+        <section className="admin-panel employee-attendance-panel">
+          <div className="employee-attendance-panel-header">
+            <div>
+              <h2>Attendance History</h2>
 
               <p>
-                {loading
-                  ? "Loading monthly attendance overview..."
-                  : `Monthly attendance overview for ${selectedMonthDetails.label}. Attendance: ${monthlyStats.attendancePercentage}%`}
+                View your daily attendance records.
               </p>
             </div>
 
-            {/* TABLE */}
+            <div className="attendance-month-select-wrapper">
+              <CalendarDays size={17} />
 
-            <div className="employee-attendance-table-wrapper">
-              <table className="employee-attendance-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Check In</th>
-                    <th>Check Out</th>
-                    <th>Working Hours</th>
-                    <th>Status</th>
-                    <th>Late</th>
-                  </tr>
-                </thead>
+              <select
+                value={selectedMonth}
+                onChange={(event) =>
+                  setSelectedMonth(event.target.value)
+                }
+                className="attendance-month-select"
+              >
+                {getMonthOptions().map((option) => (
+                  <option
+                    key={option.value}
+                    value={option.value}
+                  >
+                    {option.label}
+                  </option>
+                ))}
+              </select>
 
-                <tbody>
-                  {loading ? (
-                    <tr>
-                      <td
-                        colSpan="6"
-                        className="attendance-table-message"
-                      >
-                        <Loader2
-                          size={20}
-                          className="attendance-spinner"
-                        />
-                        Loading attendance records...
-                      </td>
-                    </tr>
-                  ) : attendanceRecords.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan="6"
-                        className="attendance-table-message"
-                      >
-                        No attendance records found for{" "}
-                        {selectedMonthDetails.label}.
-                      </td>
-                    </tr>
-                  ) : (
-                    attendanceRecords.map((record, index) => (
-                      <tr
-                        key={
-                          record.id ||
-                          `${record.attendance_date}-${index}`
-                        }
-                      >
-                        <td className="attendance-date-cell">
-                          {formatDate(record.attendance_date)}
-                        </td>
-
-                        <td>
-                          {formatTime(record.check_in)}
-                        </td>
-
-                        <td>
-                          {formatTime(record.check_out)}
-                        </td>
-
-                        <td>
-                          {formatWorkingHours(
-                            record.working_hours
-                          )}
-                        </td>
-
-                        <td>
-                          <span
-                            className={`attendance-status-badge ${getStatusClass(
-                              record.status
-                            )}`}
-                          >
-                            {record.status || "--"}
-                          </span>
-                        </td>
-
-                        <td>
-                          <span
-                            className={
-                              record.is_late
-                                ? "attendance-late-yes"
-                                : "attendance-late-no"
-                            }
-                          >
-                            {record.is_late ? "Yes" : "No"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+              <ChevronDown
+                size={16}
+                className="attendance-select-arrow"
+              />
             </div>
-          </section>
-        </div>
-      </main>
+          </div>
+
+          <div className="attendance-working-summary">
+            <div>
+              <span>Total Working Hours</span>
+
+              <strong>
+                {loading
+                  ? "Loading..."
+                  : totalWorkingHoursDisplay}
+              </strong>
+            </div>
+
+            <p>
+              {loading
+                ? "Loading monthly attendance overview..."
+                : `Monthly attendance overview for ${selectedMonthDetails.label}. Attendance: ${monthlyStats.attendancePercentage}%`}
+            </p>
+          </div>
+
+          {/* TABLE */}
+
+          <div className="employee-attendance-table-wrapper">
+            <table className="employee-attendance-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Check In</th>
+                  <th>Check Out</th>
+                  <th>Working Hours</th>
+                  <th>Status</th>
+                  <th>Late</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="attendance-table-message"
+                    >
+                      <Loader2
+                        size={20}
+                        className="attendance-spinner"
+                      />
+                      Loading attendance records...
+                    </td>
+                  </tr>
+                ) : attendanceRecords.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="attendance-table-message"
+                    >
+                      No attendance records found for{" "}
+                      {selectedMonthDetails.label}.
+                    </td>
+                  </tr>
+                ) : (
+                  attendanceRecords.map((record, index) => (
+                    <tr
+                      key={
+                        record.id ||
+                        `${record.attendance_date}-${index}`
+                      }
+                    >
+                      <td className="attendance-date-cell">
+                        {formatDate(record.attendance_date)}
+                      </td>
+
+                      <td>
+                        {formatTime(record.check_in)}
+                      </td>
+
+                      <td>
+                        {formatTime(record.check_out)}
+                      </td>
+
+                      <td>
+                        {formatWorkingHours(
+                          record.working_hours
+                        )}
+                      </td>
+
+                      <td>
+                        <span
+                          className={`attendance-status-badge ${getStatusClass(
+                            record.status
+                          )}`}
+                        >
+                          {record.status || "--"}
+                        </span>
+                      </td>
+
+                      <td>
+                        <span
+                          className={
+                            record.is_late
+                              ? "attendance-late-yes"
+                              : "attendance-late-no"
+                          }
+                        >
+                          {record.is_late ? "Yes" : "No"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
