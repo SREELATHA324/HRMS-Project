@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  LayoutDashboard,
   Users,
   CalendarDays,
   ClipboardCheck,
@@ -17,14 +16,14 @@ import {
   AlertCircle,
   ChevronRight,
   RefreshCw,
-  Menu,
-  X,
   CheckCircle2,
   CalendarCheck,
 } from "lucide-react";
-import { api } from "../../services/api";
-import "./ManagerDashboard.css";
 
+import { api } from "../../services/api";
+import ManagerSidebar from "../../components/manager/ManagerSidebar";
+import ManagerHeader from "../../components/manager/ManagerHeader";
+import Profile from "../profile/Profile";
 function ManagerDashboard({ onNavigate, onLogout }) {
   const [dashboard, setDashboard] = useState(null);
   const [attendance, setAttendance] = useState(null);
@@ -33,9 +32,11 @@ function ManagerDashboard({ onNavigate, onLogout }) {
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [error, setError] = useState("");
   const [attendanceError, setAttendanceError] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [search, setSearch] = useState("");
 
+  /* =========================================================
+     LOAD MANAGER DASHBOARD
+  ========================================================= */
   const fetchDashboard = async () => {
     try {
       setLoading(true);
@@ -55,6 +56,7 @@ function ManagerDashboard({ onNavigate, onLogout }) {
       const message =
         err?.response?.data?.detail ||
         err?.response?.data?.message ||
+        err?.message ||
         "Unable to load manager dashboard.";
 
       setError(message);
@@ -63,6 +65,9 @@ function ManagerDashboard({ onNavigate, onLogout }) {
     }
   };
 
+  /* =========================================================
+     LOAD TODAY ATTENDANCE
+  ========================================================= */
   const fetchAttendance = async () => {
     try {
       setAttendanceError("");
@@ -88,6 +93,9 @@ function ManagerDashboard({ onNavigate, onLogout }) {
     fetchAttendance();
   }, []);
 
+  /* =========================================================
+     DASHBOARD DATA
+  ========================================================= */
   const manager = dashboard?.manager || {};
 
   const team = Array.isArray(dashboard?.team)
@@ -118,9 +126,11 @@ function ManagerDashboard({ onNavigate, onLogout }) {
     );
   });
 
+  /* =========================================================
+     NAVIGATION
+  ========================================================= */
   const handleMenuClick = (menu) => {
     setActiveMenu(menu);
-    setSidebarOpen(false);
   };
 
   const handleLogout = () => {
@@ -134,6 +144,9 @@ function ManagerDashboard({ onNavigate, onLogout }) {
     window.location.replace("/#login");
   };
 
+  /* =========================================================
+     CHECK IN
+  ========================================================= */
   const handleCheckIn = async () => {
     try {
       setAttendanceLoading(true);
@@ -161,6 +174,9 @@ function ManagerDashboard({ onNavigate, onLogout }) {
     }
   };
 
+  /* =========================================================
+     CHECK OUT
+  ========================================================= */
   const handleCheckOut = async () => {
     try {
       setAttendanceLoading(true);
@@ -188,12 +204,15 @@ function ManagerDashboard({ onNavigate, onLogout }) {
     }
   };
 
+  /* =========================================================
+     INITIALS
+  ========================================================= */
   const renderInitials = (name = "") => {
-    const parts = name.trim().split(" ");
-
     if (!name.trim()) {
       return "M";
     }
+
+    const parts = name.trim().split(/\s+/);
 
     if (parts.length === 1) {
       return parts[0]
@@ -207,6 +226,9 @@ function ManagerDashboard({ onNavigate, onLogout }) {
     ).toUpperCase();
   };
 
+  /* =========================================================
+     STATUS CLASS
+  ========================================================= */
   const getStatusClass = (status) => {
     const value = String(status || "")
       .toLowerCase()
@@ -231,6 +253,9 @@ function ManagerDashboard({ onNavigate, onLogout }) {
     return "status-default";
   };
 
+  /* =========================================================
+     ATTENDANCE STATUS
+  ========================================================= */
   const getAttendanceStatus = () => {
     if (!attendance) {
       return "Not Checked In";
@@ -254,6 +279,9 @@ function ManagerDashboard({ onNavigate, onLogout }) {
     return "Not Checked In";
   };
 
+  /* =========================================================
+     MY ATTENDANCE CARD
+  ========================================================= */
   const renderAttendanceCard = () => {
     const hasCheckIn = Boolean(
       attendance?.check_in
@@ -264,126 +292,119 @@ function ManagerDashboard({ onNavigate, onLogout }) {
     );
 
     return (
-      <div className="dashboard-card manager-attendance-card">
-        <div className="card-header">
+      <section className="admin-panel manager-attendance-panel">
+        <div className="admin-panel-header">
           <div>
             <h2>My Attendance</h2>
-            <p>
-              Manage your attendance for today.
-            </p>
+            <p>Manage your attendance for today</p>
           </div>
 
-          <div className="attendance-header-icon">
-            <Clock3 size={22} />
+          <span className="admin-panel-period">
+            Today
+          </span>
+        </div>
+
+        <div className="manager-attendance-status">
+          <span>STATUS</span>
+
+          <strong
+            className={`status-badge ${getStatusClass(
+              getAttendanceStatus()
+            )}`}
+          >
+            {getAttendanceStatus()}
+          </strong>
+        </div>
+
+        <div className="manager-attendance-grid">
+          <div>
+            <span>Check In</span>
+            <strong>
+              {attendance?.check_in || "--:--"}
+            </strong>
+          </div>
+
+          <div>
+            <span>Check Out</span>
+            <strong>
+              {attendance?.check_out || "--:--"}
+            </strong>
+          </div>
+
+          <div>
+            <span>Working Hours</span>
+            <strong>
+              {attendance?.working_hours || "0h 0m"}
+            </strong>
           </div>
         </div>
 
-        <div className="my-attendance-body">
-          <div className="attendance-status-section">
-            <span className="attendance-label">
-              TODAY'S STATUS
-            </span>
-
-            <div className="attendance-status-row">
-              <span
-                className={`status-badge ${getStatusClass(
-                  getAttendanceStatus()
-                )}`}
-              >
-                {getAttendanceStatus()}
-              </span>
-            </div>
+        {attendanceError && (
+          <div className="manager-attendance-error">
+            <AlertCircle size={16} />
+            <span>{attendanceError}</span>
           </div>
+        )}
 
-          <div className="attendance-times">
-            <div className="attendance-time-box">
-              <span>Check In</span>
-              <strong>
-                {attendance?.check_in || "--:--"}
-              </strong>
-            </div>
+        <div className="manager-attendance-actions">
+          <button
+            type="button"
+            className="admin-primary-button"
+            onClick={handleCheckIn}
+            disabled={
+              attendanceLoading || hasCheckIn
+            }
+          >
+            <CheckCircle2 size={17} />
 
-            <div className="attendance-time-box">
-              <span>Check Out</span>
-              <strong>
-                {attendance?.check_out || "--:--"}
-              </strong>
-            </div>
+            {attendanceLoading
+              ? "Processing..."
+              : hasCheckIn
+              ? "Checked In"
+              : "Check In"}
+          </button>
 
-            <div className="attendance-time-box">
-              <span>Working Hours</span>
-              <strong>
-                {attendance?.working_hours || "0h 0m"}
-              </strong>
-            </div>
-          </div>
+          <button
+            type="button"
+            className="admin-secondary-button"
+            onClick={handleCheckOut}
+            disabled={
+              attendanceLoading ||
+              !hasCheckIn ||
+              hasCheckOut
+            }
+          >
+            <LogOut size={17} />
 
-          {attendanceError && (
-            <div className="attendance-error">
-              <AlertCircle size={16} />
-              <span>{attendanceError}</span>
-            </div>
-          )}
-
-          <div className="attendance-actions">
-            <button
-              className="checkin-button"
-              onClick={handleCheckIn}
-              disabled={
-                attendanceLoading ||
-                hasCheckIn
-              }
-            >
-              <CheckCircle2 size={18} />
-
-              {attendanceLoading
-                ? "Processing..."
-                : hasCheckIn
-                ? "Checked In"
-                : "Check In"}
-            </button>
-
-            <button
-              className="checkout-button"
-              onClick={handleCheckOut}
-              disabled={
-                attendanceLoading ||
-                !hasCheckIn ||
-                hasCheckOut
-              }
-            >
-              <LogOut size={18} />
-
-              {hasCheckOut
-                ? "Checked Out"
-                : "Check Out"}
-            </button>
-          </div>
+            {hasCheckOut
+              ? "Checked Out"
+              : "Check Out"}
+          </button>
         </div>
-      </div>
+      </section>
     );
   };
 
+  /* =========================================================
+     DASHBOARD PAGE
+  ========================================================= */
   const renderDashboard = () => {
     return (
       <>
-        <div className="page-heading">
+        <div className="admin-page-heading">
           <div>
-            <p className="eyebrow">
-              MANAGER PORTAL
-            </p>
-
             <h1>Manager Dashboard</h1>
 
-            <p className="page-subtitle">
+            <p>
               Welcome back,{" "}
-              {manager?.name || "Manager"}. Here's
-              your team overview.
+              {manager?.name || "Manager"}.
+              Here's your team overview.
             </p>
           </div>
 
           <button
-            className="refresh-button"
+            type="button"
+            className="admin-panel-link manager-refresh-button"
             onClick={() => {
               fetchDashboard();
               fetchAttendance();
@@ -392,9 +413,7 @@ function ManagerDashboard({ onNavigate, onLogout }) {
           >
             <RefreshCw
               size={17}
-              className={
-                loading ? "spin" : ""
-              }
+              className={loading ? "spin" : ""}
             />
             Refresh
           </button>
@@ -402,92 +421,85 @@ function ManagerDashboard({ onNavigate, onLogout }) {
 
         {renderAttendanceCard()}
 
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon blue">
-              <Users size={21} />
+        <section className="admin-stats-grid">
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon">
+              <Users size={20} />
             </div>
 
-            <div className="stat-content">
-              <span>Total Team Members</span>
-              <strong>
+            <div>
+              <p>Total Team Members</p>
+              <h3>
                 {teamStats?.totalMembers ?? 0}
-              </strong>
-              <small>
-                Team members assigned
-              </small>
+              </h3>
+              <span>Team members assigned</span>
             </div>
           </div>
 
-          <div className="stat-card">
-            <div className="stat-icon green">
-              <UserCheck size={21} />
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon">
+              <UserCheck size={20} />
             </div>
 
-            <div className="stat-content">
-              <span>Present Today</span>
-              <strong>
+            <div>
+              <p>Present Today</p>
+              <h3>
                 {teamStats?.presentToday ?? 0}
-              </strong>
-              <small>
-                Currently present
-              </small>
+              </h3>
+              <span>Currently present</span>
             </div>
           </div>
 
-          <div className="stat-card">
-            <div className="stat-icon orange">
-              <Clock3 size={21} />
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon">
+              <Clock3 size={20} />
             </div>
 
-            <div className="stat-content">
-              <span>Late Today</span>
-              <strong>
+            <div>
+              <p>Late Today</p>
+              <h3>
                 {teamStats?.lateToday ?? 0}
-              </strong>
-              <small>
-                Late arrivals
-              </small>
+              </h3>
+              <span>Late arrivals</span>
             </div>
           </div>
 
-          <div className="stat-card">
-            <div className="stat-icon purple">
-              <UserPlus size={21} />
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon">
+              <UserPlus size={20} />
             </div>
 
-            <div className="stat-content">
-              <span>New Joiners</span>
-              <strong>
+            <div>
+              <p>New Joiners</p>
+              <h3>
                 {teamStats?.newJoiners ?? 0}
-              </strong>
-              <small>
-                Recently joined
-              </small>
+              </h3>
+              <span>Recently joined</span>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="main-grid">
-          <div className="dashboard-card attendance-card">
-            <div className="card-header">
+        <section className="admin-dashboard-grid">
+          <div className="admin-panel">
+            <div className="admin-panel-header">
               <div>
                 <h2>
                   Today's Team Attendance
                 </h2>
-
                 <p>
                   Monitor your team's attendance
-                  status.
+                  status
                 </p>
               </div>
 
-              <CalendarCheck size={21} />
+              <span className="admin-panel-period">
+                Today
+              </span>
             </div>
 
             <div className="attendance-summary">
               <div className="attendance-item">
-                <div className="attendance-dot present"></div>
+                <span className="attendance-dot present" />
 
                 <div>
                   <strong>
@@ -498,7 +510,7 @@ function ManagerDashboard({ onNavigate, onLogout }) {
               </div>
 
               <div className="attendance-item">
-                <div className="attendance-dot absent"></div>
+                <span className="attendance-dot absent" />
 
                 <div>
                   <strong>
@@ -509,7 +521,7 @@ function ManagerDashboard({ onNavigate, onLogout }) {
               </div>
 
               <div className="attendance-item">
-                <div className="attendance-dot late"></div>
+                <span className="attendance-dot late" />
 
                 <div>
                   <strong>
@@ -520,18 +532,14 @@ function ManagerDashboard({ onNavigate, onLogout }) {
               </div>
             </div>
 
-            <div className="attendance-progress">
-              <div className="progress-label">
-                <span>
-                  Team Attendance
-                </span>
+            <div className="manager-progress-section">
+              <div className="manager-progress-label">
+                <span>Team Attendance</span>
 
                 <strong>
                   {teamStats?.totalMembers
                     ? Math.round(
-                        ((teamStats
-                          ?.presentToday ||
-                          0) /
+                        ((teamStats?.presentToday || 0) /
                           teamStats.totalMembers) *
                           100
                       )
@@ -540,16 +548,14 @@ function ManagerDashboard({ onNavigate, onLogout }) {
                 </strong>
               </div>
 
-              <div className="progress-track">
-                <div
-                  className="progress-fill"
+              <div className="manager-progress-track">
+                <span
                   style={{
                     width: `${
                       teamStats?.totalMembers
                         ? Math.min(
                             100,
-                            ((teamStats
-                              ?.presentToday ||
+                            ((teamStats?.presentToday ||
                               0) /
                               teamStats.totalMembers) *
                               100
@@ -562,7 +568,8 @@ function ManagerDashboard({ onNavigate, onLogout }) {
             </div>
 
             <button
-              className="card-link"
+              type="button"
+              className="admin-panel-link"
               onClick={() =>
                 handleMenuClick("attendance")
               }
@@ -572,72 +579,60 @@ function ManagerDashboard({ onNavigate, onLogout }) {
             </button>
           </div>
 
-          <div className="dashboard-card approvals-card">
-            <div className="card-header">
+          <div className="admin-panel">
+            <div className="admin-panel-header">
               <div>
                 <h2>Pending Approvals</h2>
-
                 <p>
-                  Requests waiting for your
-                  action.
+                  Requests waiting for your action
                 </p>
               </div>
 
-              <ClipboardCheck size={21} />
+              <span className="admin-panel-period">
+                {pendingApprovals?.total ?? 0} Pending
+              </span>
             </div>
 
-            <div className="approval-list">
-              <div className="approval-row">
-                <div className="approval-icon">
+            <div className="manager-approval-list">
+              <div className="manager-approval-row">
+                <div>
                   <CalendarDays size={18} />
                 </div>
 
-                <div>
+                <section>
                   <strong>
                     Attendance Corrections
                   </strong>
 
                   <span>
-                    {pendingApprovals
-                      ?.corrections ?? 0}{" "}
+                    {pendingApprovals?.corrections ??
+                      0}{" "}
                     requests
                   </span>
-                </div>
-
-                <ChevronRight size={16} />
+                </section>
               </div>
 
-              <div className="approval-row">
-                <div className="approval-icon">
+              <div className="manager-approval-row">
+                <div>
                   <Clock3 size={18} />
                 </div>
 
-                <div>
+                <section>
                   <strong>
                     Overtime Requests
                   </strong>
 
                   <span>
-                    {pendingApprovals
-                      ?.overtime ?? 0}{" "}
+                    {pendingApprovals?.overtime ?? 0}{" "}
                     requests
                   </span>
-                </div>
-
-                <ChevronRight size={16} />
+                </section>
               </div>
             </div>
 
-            <div className="total-approval">
-              <span>Total Pending</span>
-
-              <strong>
-                {pendingApprovals?.total ?? 0}
-              </strong>
-            </div>
-
             <button
-              className="card-link"
+              type="button"
+              className="admin-panel-link"
               onClick={() =>
                 handleMenuClick("approvals")
               }
@@ -646,66 +641,66 @@ function ManagerDashboard({ onNavigate, onLogout }) {
               <ChevronRight size={16} />
             </button>
           </div>
-        </div>
+        </section>
 
-        <div className="dashboard-card monthly-card">
-          <div className="card-header">
+        <section className="admin-panel">
+          <div className="admin-panel-header">
             <div>
               <h2>
                 Monthly Attendance Overview
               </h2>
-
               <p>
-                Team attendance summary for
-                this month.
+                Team attendance summary for this
+                month
               </p>
             </div>
 
-            <BarChart3 size={21} />
+            <span className="admin-panel-period">
+              This Month
+            </span>
           </div>
 
-          <div className="monthly-grid">
-            <div className="monthly-stat present-month">
+          <div className="manager-monthly-grid">
+            <div>
               <span>Present</span>
               <strong>
                 {monthlyStats?.present ?? 0}
               </strong>
             </div>
 
-            <div className="monthly-stat absent-month">
+            <div>
               <span>Absent</span>
               <strong>
                 {monthlyStats?.absent ?? 0}
               </strong>
             </div>
 
-            <div className="monthly-stat half-month">
+            <div>
               <span>Half Day</span>
               <strong>
                 {monthlyStats?.half ?? 0}
               </strong>
             </div>
 
-            <div className="monthly-stat late-month">
+            <div>
               <span>Late</span>
               <strong>
                 {monthlyStats?.late ?? 0}
               </strong>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="dashboard-card team-preview-card">
-          <div className="card-header team-header">
+        <section className="admin-panel">
+          <div className="admin-panel-header">
             <div>
               <h2>My Team</h2>
-              <p>
-                Employees reporting to you.
-              </p>
+              <p>Employees reporting to you</p>
             </div>
 
             <button
-              className="outline-button"
+              type="button"
+              className="admin-panel-link"
               onClick={() =>
                 handleMenuClick("team")
               }
@@ -714,8 +709,8 @@ function ManagerDashboard({ onNavigate, onLogout }) {
             </button>
           </div>
 
-          <div className="team-table-wrapper">
-            <table className="team-table">
+          <div className="admin-table-wrapper">
+            <table className="admin-table">
               <thead>
                 <tr>
                   <th>Employee</th>
@@ -730,11 +725,9 @@ function ManagerDashboard({ onNavigate, onLogout }) {
                 {team.slice(0, 5).map((member) => (
                   <tr key={member?.id}>
                     <td>
-                      <div className="employee-cell">
-                        <div className="employee-avatar">
-                          {renderInitials(
-                            member?.name
-                          )}
+                      <div className="manager-employee-cell">
+                        <div className="manager-employee-avatar">
+                          {renderInitials(member?.name)}
                         </div>
 
                         <div>
@@ -777,7 +770,7 @@ function ManagerDashboard({ onNavigate, onLogout }) {
                   <tr>
                     <td
                       colSpan="5"
-                      className="empty-cell"
+                      className="admin-empty-state"
                     >
                       No team members found.
                     </td>
@@ -786,32 +779,30 @@ function ManagerDashboard({ onNavigate, onLogout }) {
               </tbody>
             </table>
           </div>
-        </div>
+        </section>
       </>
     );
   };
 
+  /* =========================================================
+     MY TEAM PAGE
+  ========================================================= */
   const renderTeam = () => {
     return (
       <>
-        <div className="page-heading">
+        <div className="admin-page-heading">
           <div>
-            <p className="eyebrow">
-              TEAM MANAGEMENT
-            </p>
-
             <h1>My Team</h1>
-
-            <p className="page-subtitle">
-              View and manage your team members.
+            <p>
+              View and manage your team members
             </p>
           </div>
         </div>
 
-        <div className="dashboard-card full-card">
-          <div className="table-toolbar">
-            <div className="search-box">
-              <Search size={18} />
+        <section className="admin-panel">
+          <div className="admin-table-toolbar">
+            <div className="admin-search">
+              <Search size={17} />
 
               <input
                 value={search}
@@ -822,13 +813,13 @@ function ManagerDashboard({ onNavigate, onLogout }) {
               />
             </div>
 
-            <div className="member-count">
+            <span className="admin-panel-period">
               {filteredTeam.length} Members
-            </div>
+            </span>
           </div>
 
-          <div className="team-table-wrapper">
-            <table className="team-table">
+          <div className="admin-table-wrapper">
+            <table className="admin-table">
               <thead>
                 <tr>
                   <th>Employee</th>
@@ -845,11 +836,9 @@ function ManagerDashboard({ onNavigate, onLogout }) {
                 {filteredTeam.map((member) => (
                   <tr key={member?.id}>
                     <td>
-                      <div className="employee-cell">
-                        <div className="employee-avatar">
-                          {renderInitials(
-                            member?.name
-                          )}
+                      <div className="manager-employee-cell">
+                        <div className="manager-employee-avatar">
+                          {renderInitials(member?.name)}
                         </div>
 
                         <strong>
@@ -894,105 +883,104 @@ function ManagerDashboard({ onNavigate, onLogout }) {
                   <tr>
                     <td
                       colSpan="7"
-                      className="empty-cell"
+                      className="admin-empty-state"
                     >
-                      No employees match your
-                      search.
+                      No employees match your search.
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
-        </div>
+        </section>
       </>
     );
   };
 
+  /* =========================================================
+     ATTENDANCE PAGE
+  ========================================================= */
   const renderAttendance = () => {
     return (
       <>
-        <div className="page-heading">
+        <div className="admin-page-heading">
           <div>
-            <p className="eyebrow">
-              ATTENDANCE
-            </p>
-
             <h1>Team Attendance</h1>
-
-            <p className="page-subtitle">
-              Monitor today's team attendance.
+            <p>
+              Monitor today's team attendance
             </p>
           </div>
         </div>
 
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon green">
-              <UserCheck size={21} />
+        <section className="admin-stats-grid">
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon">
+              <UserCheck size={20} />
             </div>
 
-            <div className="stat-content">
-              <span>Present Today</span>
-              <strong>
+            <div>
+              <p>Present Today</p>
+              <h3>
                 {teamStats?.presentToday ?? 0}
-              </strong>
+              </h3>
             </div>
           </div>
 
-          <div className="stat-card">
-            <div className="stat-icon red">
-              <UserX size={21} />
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon">
+              <UserX size={20} />
             </div>
 
-            <div className="stat-content">
-              <span>Absent Today</span>
-              <strong>
+            <div>
+              <p>Absent Today</p>
+              <h3>
                 {teamStats?.absentToday ?? 0}
-              </strong>
+              </h3>
             </div>
           </div>
 
-          <div className="stat-card">
-            <div className="stat-icon orange">
-              <Clock3 size={21} />
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon">
+              <Clock3 size={20} />
             </div>
 
-            <div className="stat-content">
-              <span>Late Today</span>
-              <strong>
+            <div>
+              <p>Late Today</p>
+              <h3>
                 {teamStats?.lateToday ?? 0}
-              </strong>
+              </h3>
             </div>
           </div>
 
-          <div className="stat-card">
-            <div className="stat-icon blue">
-              <Users size={21} />
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon">
+              <Users size={20} />
             </div>
 
-            <div className="stat-content">
-              <span>Active Members</span>
-              <strong>
+            <div>
+              <p>Active Members</p>
+              <h3>
                 {teamStats?.activeMembers ?? 0}
-              </strong>
+              </h3>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="dashboard-card full-card">
-          <div className="card-header">
+        <section className="admin-panel">
+          <div className="admin-panel-header">
             <div>
               <h2>Attendance Summary</h2>
               <p>
-                Current attendance statistics.
+                Current team attendance statistics
               </p>
             </div>
 
-            <CalendarCheck size={21} />
+            <span className="admin-panel-period">
+              Today
+            </span>
           </div>
 
-          <div className="attendance-large-grid">
+          <div className="manager-monthly-grid">
             <div>
               <span>Present</span>
               <strong>
@@ -1021,181 +1009,84 @@ function ManagerDashboard({ onNavigate, onLogout }) {
               </strong>
             </div>
           </div>
-        </div>
+        </section>
       </>
     );
   };
 
+  /* =========================================================
+     APPROVALS PAGE
+  ========================================================= */
   const renderApprovals = () => {
     return (
       <>
-        <div className="page-heading">
+        <div className="admin-page-heading">
           <div>
-            <p className="eyebrow">
-              APPROVAL CENTER
-            </p>
-
             <h1>Pending Approvals</h1>
-
-            <p className="page-subtitle">
-              Review requests waiting for
-              manager action.
+            <p>
+              Review requests waiting for manager
+              action
             </p>
           </div>
         </div>
 
-        <div className="approval-page-grid">
-          <div className="approval-page-card">
-            <div className="approval-page-icon">
-              <CalendarDays size={23} />
+        <section className="admin-stats-grid">
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon">
+              <CalendarDays size={20} />
             </div>
 
             <div>
-              <span>
-                Attendance Corrections
-              </span>
-
-              <strong>
-                {pendingApprovals
-                  ?.corrections ?? 0}
-              </strong>
-
-              <p>
-                Attendance correction requests
-              </p>
+              <p>Attendance Corrections</p>
+              <h3>
+                {pendingApprovals?.corrections ?? 0}
+              </h3>
+              <span>Correction requests</span>
             </div>
           </div>
 
-          <div className="approval-page-card">
-            <div className="approval-page-icon">
-              <Clock3 size={23} />
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon">
+              <Clock3 size={20} />
             </div>
 
             <div>
-              <span>
-                Overtime Requests
-              </span>
-
-              <strong>
-                {pendingApprovals
-                  ?.overtime ?? 0}
-              </strong>
-
-              <p>
-                Overtime approval requests
-              </p>
+              <p>Overtime Requests</p>
+              <h3>
+                {pendingApprovals?.overtime ?? 0}
+              </h3>
+              <span>Approval requests</span>
             </div>
           </div>
 
-          <div className="approval-page-card total">
-            <div className="approval-page-icon">
-              <CheckCircle2 size={23} />
+          <div className="admin-stat-card">
+            <div className="admin-stat-icon">
+              <ClipboardCheck size={20} />
             </div>
 
             <div>
-              <span>Total Pending</span>
-
-              <strong>
+              <p>Total Pending</p>
+              <h3>
                 {pendingApprovals?.total ?? 0}
-              </strong>
-
-              <p>
-                Total requests requiring
-                attention
-              </p>
+              </h3>
+              <span>Requires attention</span>
             </div>
           </div>
-        </div>
+        </section>
       </>
     );
   };
 
+  /* =========================================================
+     PROFILE PAGE
+  ========================================================= */
   const renderProfile = () => {
-    return (
-      <>
-        <div className="page-heading">
-          <div>
-            <p className="eyebrow">
-              MY PROFILE
-            </p>
-
-            <h1>Manager Profile</h1>
-
-            <p className="page-subtitle">
-              Your manager account information.
-            </p>
-          </div>
-        </div>
-
-        <div className="profile-card">
-          <div className="profile-top">
-            <div className="large-avatar">
-              {renderInitials(manager?.name)}
-            </div>
-
-            <div>
-              <h2>
-                {manager?.name || "Manager"}
-              </h2>
-
-              <p>Manager / HR</p>
-            </div>
-          </div>
-
-          <div className="profile-details">
-            <div>
-              <span>Full Name</span>
-
-              <strong>
-                {manager?.name || "-"}
-              </strong>
-            </div>
-
-            <div>
-              <span>Employee Code</span>
-
-              <strong>
-                {manager?.employeeCode || "-"}
-              </strong>
-            </div>
-
-            <div>
-              <span>Manager ID</span>
-
-              <strong>
-                {manager?.id || "-"}
-              </strong>
-            </div>
-
-            <div>
-              <span>Email</span>
-
-              <strong>
-                {manager?.email || "-"}
-              </strong>
-            </div>
-
-            <div>
-              <span>Department</span>
-
-              <strong>
-                {manager?.department || "-"}
-              </strong>
-            </div>
-
-            <div>
-              <span>Designation</span>
-
-              <strong>
-                {manager?.designation || "-"}
-              </strong>
-            </div>
-          </div>
-        </div>
-      </>
-    );
+    return <Profile/>;
   };
 
+  /* =========================================================
+     REPORTS PAGE
+  ========================================================= */
   const renderReports = () => {
     const present = Number(
       monthlyStats?.present || 0
@@ -1223,170 +1114,114 @@ function ManagerDashboard({ onNavigate, onLogout }) {
 
     return (
       <>
-        <div className="page-heading">
+        <div className="admin-page-heading">
           <div>
-            <p className="eyebrow">
-              REPORTS
-            </p>
-
             <h1>Team Reports</h1>
-
-            <p className="page-subtitle">
-              Team statistics and monthly
-              attendance overview.
+            <p>
+              Team statistics and monthly attendance
+              overview
             </p>
           </div>
         </div>
 
-        <div className="dashboard-card full-card">
-          <div className="card-header">
+        <section className="admin-panel">
+          <div className="admin-panel-header">
             <div>
-              <h2>
-                Monthly Team Attendance
-              </h2>
-
-              <p>
-                Current monthly statistics.
-              </p>
+              <h2>Monthly Team Attendance</h2>
+              <p>Current monthly statistics</p>
             </div>
 
-            <BarChart3 size={21} />
+            <span className="admin-panel-period">
+              This Month
+            </span>
           </div>
 
-          <div className="report-bars">
-            <div className="report-row">
-              <span>Present</span>
+          <div className="manager-report-list">
+            {[
+              ["Present", present],
+              ["Absent", absent],
+              ["Half Day", half],
+              ["Late", late],
+            ].map(([label, value]) => (
+              <div
+                className="manager-report-row"
+                key={label}
+              >
+                <span>{label}</span>
 
-              <div className="report-track">
-                <div
-                  className="report-fill present-fill"
-                  style={{
-                    width: `${
-                      (present / maxValue) *
-                      100
-                    }%`,
-                  }}
-                />
+                <div className="manager-report-track">
+                  <span
+                    style={{
+                      width: `${
+                        (value / maxValue) * 100
+                      }%`,
+                    }}
+                  />
+                </div>
+
+                <strong>{value}</strong>
               </div>
-
-              <strong>{present}</strong>
-            </div>
-
-            <div className="report-row">
-              <span>Absent</span>
-
-              <div className="report-track">
-                <div
-                  className="report-fill absent-fill"
-                  style={{
-                    width: `${
-                      (absent / maxValue) *
-                      100
-                    }%`,
-                  }}
-                />
-              </div>
-
-              <strong>{absent}</strong>
-            </div>
-
-            <div className="report-row">
-              <span>Half Day</span>
-
-              <div className="report-track">
-                <div
-                  className="report-fill half-fill"
-                  style={{
-                    width: `${
-                      (half / maxValue) *
-                      100
-                    }%`,
-                  }}
-                />
-              </div>
-
-              <strong>{half}</strong>
-            </div>
-
-            <div className="report-row">
-              <span>Late</span>
-
-              <div className="report-track">
-                <div
-                  className="report-fill late-fill"
-                  style={{
-                    width: `${
-                      (late / maxValue) *
-                      100
-                    }%`,
-                  }}
-                />
-              </div>
-
-              <strong>{late}</strong>
-            </div>
+            ))}
           </div>
-        </div>
+        </section>
       </>
     );
   };
 
+  /* =========================================================
+     SETTINGS PAGE
+  ========================================================= */
   const renderSettings = () => {
     return (
       <>
-        <div className="page-heading">
+        <div className="admin-page-heading">
           <div>
-            <p className="eyebrow">
-              SETTINGS
-            </p>
-
             <h1>Settings</h1>
-
-            <p className="page-subtitle">
-              Manager dashboard settings.
+            <p>
+              Manager dashboard settings
             </p>
           </div>
         </div>
 
-        <div className="dashboard-card settings-card">
-          <div className="settings-row">
-            <div className="settings-icon">
+        <section className="admin-panel">
+          <div className="manager-settings-row">
+            <div className="admin-stat-icon">
               <Settings size={20} />
             </div>
 
             <div>
               <h3>Account Settings</h3>
-
               <p>
-                Manage your account preferences
-                and dashboard settings.
+                Manage your account preferences and
+                dashboard settings
               </p>
             </div>
 
             <ChevronRight size={18} />
           </div>
 
-          <div className="settings-row">
-            <div className="settings-icon">
+          <div className="manager-settings-row">
+            <div className="admin-stat-icon">
               <Bell size={20} />
             </div>
 
             <div>
               <h3>Notifications</h3>
-
               <p>
-                Configure your HRMS
-                notifications.
+                Configure your HRMS notifications
               </p>
             </div>
 
             <ChevronRight size={18} />
           </div>
-        </div>
+        </section>
       </>
     );
   };
 
+  /* =========================================================
+     CONTENT ROUTER
+  ========================================================= */
   const renderContent = () => {
     if (activeMenu === "dashboard") {
       return renderDashboard();
@@ -1419,242 +1254,42 @@ function ManagerDashboard({ onNavigate, onLogout }) {
     return renderDashboard();
   };
 
+  /* =========================================================
+     MAIN LAYOUT
+     SAME STRUCTURE AS ADMIN DASHBOARD
+  ========================================================= */
   return (
-    <div className="manager-layout">
-      {sidebarOpen && (
-        <div
-          className="mobile-overlay"
-          onClick={() =>
-            setSidebarOpen(false)
+    <div className="admin-layout">
+      <ManagerSidebar
+        activePage={activeMenu}
+        onNavigate={handleMenuClick}
+        onLogout={handleLogout}
+      />
+
+      <main className="admin-main">
+        <ManagerHeader
+          manager={manager}
+          pendingCount={
+            pendingApprovals?.total || 0
           }
         />
-      )}
 
-      <aside
-        className={`manager-sidebar ${
-          sidebarOpen
-            ? "sidebar-open"
-            : ""
-        }`}
-      >
-        <div className="sidebar-brand">
-          <div className="brand-logo">
-            H
-          </div>
-
-          <div>
-            <h2>HRMS</h2>
-            <span>
-              Management Portal
-            </span>
-          </div>
-
-          <button
-            className="mobile-close"
-            onClick={() =>
-              setSidebarOpen(false)
-            }
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="sidebar-section-title">
-          MAIN MENU
-        </div>
-
-        <nav className="sidebar-nav">
-          <button
-            className={
-              activeMenu === "dashboard"
-                ? "nav-item active"
-                : "nav-item"
-            }
-            onClick={() =>
-              handleMenuClick("dashboard")
-            }
-          >
-            <LayoutDashboard size={19} />
-            <span>Dashboard</span>
-          </button>
-
-          <button
-            className={
-              activeMenu === "profile"
-                ? "nav-item active"
-                : "nav-item"
-            }
-            onClick={() =>
-              handleMenuClick("profile")
-            }
-          >
-            <UserCircle size={19} />
-            <span>My Profile</span>
-          </button>
-
-          <button
-            className={
-              activeMenu === "team"
-                ? "nav-item active"
-                : "nav-item"
-            }
-            onClick={() =>
-              handleMenuClick("team")
-            }
-          >
-            <Users size={19} />
-            <span>My Team</span>
-          </button>
-
-          <button
-            className={
-              activeMenu === "attendance"
-                ? "nav-item active"
-                : "nav-item"
-            }
-            onClick={() =>
-              handleMenuClick(
-                "attendance"
-              )
-            }
-          >
-            <CalendarDays size={19} />
-            <span>Attendance</span>
-          </button>
-
-          <button
-            className={
-              activeMenu === "approvals"
-                ? "nav-item active"
-                : "nav-item"
-            }
-            onClick={() =>
-              handleMenuClick(
-                "approvals"
-              )
-            }
-          >
-            <ClipboardCheck size={19} />
-            <span>Approvals</span>
-
-            {Number(
-              pendingApprovals?.total || 0
-            ) > 0 && (
-              <b className="nav-count">
-                {pendingApprovals.total}
-              </b>
-            )}
-          </button>
-
-          <button
-            className={
-              activeMenu === "reports"
-                ? "nav-item active"
-                : "nav-item"
-            }
-            onClick={() =>
-              handleMenuClick("reports")
-            }
-          >
-            <BarChart3 size={19} />
-            <span>Reports</span>
-          </button>
-        </nav>
-
-        <div className="sidebar-bottom">
-          <button
-            className={
-              activeMenu === "settings"
-                ? "nav-item active"
-                : "nav-item"
-            }
-            onClick={() =>
-              handleMenuClick("settings")
-            }
-          >
-            <Settings size={19} />
-            <span>Settings</span>
-          </button>
-
-          <button
-            className="nav-item logout-item"
-            onClick={handleLogout}
-          >
-            <LogOut size={19} />
-            <span>Logout</span>
-          </button>
-        </div>
-      </aside>
-
-      <main className="manager-main">
-        <header className="manager-header">
-          <button
-            className="mobile-menu"
-            onClick={() =>
-              setSidebarOpen(true)
-            }
-          >
-            <Menu size={22} />
-          </button>
-
-          <div className="header-spacer" />
-
-          <button className="notification-button">
-            <Bell size={20} />
-
-            {Number(
-              pendingApprovals?.total || 0
-            ) > 0 && (
-              <span className="notification-dot" />
-            )}
-          </button>
-
-          <div className="header-profile">
-            <div className="header-avatar">
-              {renderInitials(
-                manager?.name
-              )}
-            </div>
-
-            <div className="header-profile-info">
-              <strong>
-                {manager?.name ||
-                  "Manager"}
-              </strong>
-
-              <span>
-                {manager?.employeeCode ||
-                  "Manager"}
-              </span>
-            </div>
-          </div>
-        </header>
-
-        <div className="manager-content">
+        <div className="admin-dashboard-content">
           {loading && !dashboard ? (
-            <div className="loading-screen">
-              <div className="loader" />
-              <p>
-                Loading dashboard...
-              </p>
+            <div className="admin-loading">
+              Loading dashboard...
             </div>
           ) : error && !dashboard ? (
-            <div className="error-card">
-              <div className="error-icon">
-                <AlertCircle size={25} />
-              </div>
-
-              <h2>
-                Unable to load dashboard
-              </h2>
-
-              <p>{error}</p>
+            <div className="admin-form-error">
+              <AlertCircle size={18} />
+              <span>{error}</span>
 
               <button
-                className="retry-button"
+                type="button"
+                className="admin-primary-button"
                 onClick={fetchDashboard}
               >
-                <RefreshCw size={17} />
+                <RefreshCw size={16} />
                 Try Again
               </button>
             </div>

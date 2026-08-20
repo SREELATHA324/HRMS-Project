@@ -8,13 +8,16 @@ import {
 } from "lucide-react";
 import { api } from "./services/api";
 
-function LoginPage({ onForgotPassword, onNavigate }) {
+function LoginPage({ onForgotPassword, onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  /* =========================================================
+     LOGIN SUBMIT
+  ========================================================= */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -34,6 +37,9 @@ function LoginPage({ onForgotPassword, onNavigate }) {
 
       const data = response?.data || response;
 
+      /* =====================================================
+         SUCCESSFUL LOGIN
+      ===================================================== */
       if (data?.success) {
         const token = data?.token;
         const user = data?.user;
@@ -43,50 +49,32 @@ function LoginPage({ onForgotPassword, onNavigate }) {
           return;
         }
 
+        /* Save token */
         localStorage.setItem("token", token);
+
+        /* Save logged-in user */
         localStorage.setItem(
           "user",
           JSON.stringify(user)
         );
 
-        const role = String(user?.role || "")
-          .trim()
-          .toLowerCase();
+        /*
+          IMPORTANT:
 
-        if (role === "admin") {
-          if (onNavigate) {
-            onNavigate("dashboard", null, true);
-          } else {
-            window.location.replace(
-              "/#dashboard"
-            );
-          }
+          App.jsx already handles:
 
+          admin    -> dashboard
+          manager  -> managerDashboard
+          employee -> employeeDashboard
+
+          Therefore, do not do role routing here.
+        */
+        if (onLogin) {
+          onLogin(user);
           return;
         }
 
-        if (
-          role === "manager" ||
-          role === "hr"
-        ) {
-          if (onNavigate) {
-            onNavigate(
-              "managerDashboard",
-              null,
-              true
-            );
-          } else {
-            window.location.replace(
-              "/#manager/dashboard"
-            );
-          }
-
-          return;
-        }
-
-        setError(
-          "Your account role is not configured for dashboard access."
-        );
+        setError("Unable to navigate after login.");
       } else {
         setError(
           data?.message ||
@@ -108,24 +96,37 @@ function LoginPage({ onForgotPassword, onNavigate }) {
     }
   };
 
+  /* =========================================================
+     UI
+  ========================================================= */
   return (
     <div className="login-page">
+
+      {/* =====================================================
+          LEFT SIDE
+      ===================================================== */}
       <div className="login-left">
         <div className="circle circle-one"></div>
         <div className="circle circle-two"></div>
 
         <div className="left-content">
+
+          {/* LOGO */}
           <div className="logo-section">
-            <div className="logo-box">H</div>
+            <div className="logo-box">
+              H
+            </div>
 
             <div>
               <h2>HRMS</h2>
+
               <p>
                 Human Resource Management System
               </p>
             </div>
           </div>
 
+          {/* HERO */}
           <div className="hero-content">
             <div className="small-title">
               SMARTER HR MANAGEMENT
@@ -145,7 +146,9 @@ function LoginPage({ onForgotPassword, onNavigate }) {
             </p>
           </div>
 
+          {/* STATS */}
           <div className="stats">
+
             <div className="stat">
               <strong>24/7</strong>
               <span>Access</span>
@@ -164,14 +167,22 @@ function LoginPage({ onForgotPassword, onNavigate }) {
               <strong>All-in-One</strong>
               <span>HR Solution</span>
             </div>
+
           </div>
         </div>
       </div>
 
+      {/* =====================================================
+          RIGHT SIDE
+      ===================================================== */}
       <div className="login-right">
         <div className="login-card">
+
+          {/* MOBILE LOGO */}
           <div className="mobile-logo">
-            <div className="mobile-logo-box">H</div>
+            <div className="mobile-logo-box">
+              H
+            </div>
 
             <div>
               <h2>HRMS</h2>
@@ -179,6 +190,7 @@ function LoginPage({ onForgotPassword, onNavigate }) {
             </div>
           </div>
 
+          {/* HEADING */}
           <div className="login-heading">
             <span>WELCOME BACK</span>
 
@@ -192,13 +204,19 @@ function LoginPage({ onForgotPassword, onNavigate }) {
             </p>
           </div>
 
+          {/* =================================================
+              LOGIN FORM
+          ================================================= */}
           <form onSubmit={handleSubmit}>
+
+            {/* ERROR MESSAGE */}
             {error && (
               <div className="error-message">
                 {error}
               </div>
             )}
 
+            {/* EMAIL */}
             <div className="field">
               <label>Email</label>
 
@@ -217,8 +235,10 @@ function LoginPage({ onForgotPassword, onNavigate }) {
               </div>
             </div>
 
+            {/* PASSWORD */}
             <div className="field">
               <div className="password-top">
+
                 <label>Password</label>
 
                 <button
@@ -228,6 +248,7 @@ function LoginPage({ onForgotPassword, onNavigate }) {
                 >
                   Forgot password?
                 </button>
+
               </div>
 
               <div className="input-box">
@@ -250,11 +271,11 @@ function LoginPage({ onForgotPassword, onNavigate }) {
                 <button
                   type="button"
                   className="eye-button"
-                  onClick={() =>
+                  onClick={() => {
                     setShowPassword(
                       !showPassword
-                    )
-                  }
+                    );
+                  }}
                 >
                   {showPassword ? (
                     <EyeOff size={19} />
@@ -265,12 +286,14 @@ function LoginPage({ onForgotPassword, onNavigate }) {
               </div>
             </div>
 
+            {/* SPACE */}
             <div
               style={{
                 marginTop: "20px",
               }}
             ></div>
 
+            {/* SIGN IN BUTTON */}
             <button
               type="submit"
               className="sign-in-button"
@@ -282,8 +305,10 @@ function LoginPage({ onForgotPassword, onNavigate }) {
 
               <ArrowRight size={18} />
             </button>
+
           </form>
 
+          {/* FOOTER */}
           <div className="footer">
             <p>
               © 2026 HRMS. All rights reserved.
@@ -294,8 +319,10 @@ function LoginPage({ onForgotPassword, onNavigate }) {
               Platform
             </span>
           </div>
+
         </div>
       </div>
+
     </div>
   );
 }
