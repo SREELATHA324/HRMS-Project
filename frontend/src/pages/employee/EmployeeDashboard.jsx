@@ -233,6 +233,26 @@ function EmployeeDashboard({ onNavigate, onLogout }) {
   };
 
   /* =========================================================
+     FORMAT WORKING HOURS - ADDED FIX
+  ========================================================= */
+
+  const formatWorkingHours = (value) => {
+    if (value === null || value === undefined || value === "") {
+      return "0h 00m";
+    }
+
+    const hours = Number(value);
+    if (Number.isNaN(hours) || hours <= 0) {
+      return "0h 00m";
+    }
+
+    const wholeHours = Math.floor(hours);
+    const minutes = Math.round((hours - wholeHours) * 60);
+
+    return `${wholeHours}h ${String(minutes).padStart(2, "0")}m`;
+  };
+
+  /* =========================================================
      ATTENDANCE VALUES
   ========================================================= */
 
@@ -254,30 +274,59 @@ function EmployeeDashboard({ onNavigate, onLogout }) {
 
   const checkOut = formatTime(rawCheckOut);
 
-  const workingHours =
+  const workingHoursRaw =
     todayAttendance?.working_hours ??
     todayAttendance?.workingHours ??
-    "00h 00m";
+    0;
+
+  const workingHours = formatWorkingHours(workingHoursRaw);
 
   const hasCheckedIn = Boolean(rawCheckIn);
 
   const hasCheckedOut = Boolean(rawCheckOut);
 
   /* =========================================================
-     NAVIGATION
+     NAVIGATION - FIXED
   ========================================================= */
 
   const handleNavigation = (page) => {
+    // Handle dashboard navigation
     if (page === "employeeDashboard") {
       setActivePage("dashboard");
       return;
     }
 
+    // Handle profile navigation
     if (page === "employeeProfile") {
       setActivePage("profile");
       return;
     }
 
+    // Handle attendance navigation
+    if (page === "employeeAttendance") {
+      setActivePage("attendance");
+      return;
+    }
+
+    // Handle attendance correction navigation
+    if (page === "employeeAttendanceCorrection") {
+      setActivePage("attendance");
+      // Navigate to attendance correction page
+      if (onNavigate) {
+        onNavigate(page);
+      }
+      return;
+    }
+
+    // Handle leaves navigation
+    if (page === "employeeLeaves") {
+      if (onNavigate) {
+        onNavigate(page);
+      }
+      return;
+    }
+
+    // Handle any other navigation
     if (onNavigate) {
       onNavigate(page);
     }
@@ -384,7 +433,7 @@ function EmployeeDashboard({ onNavigate, onLogout }) {
           {activePage === "profile" ? (
             <Profile />
           ) : activePage === "attendance" ? (
-            <EmployeeAttendance />
+            <EmployeeAttendance onNavigate={handleNavigation} />
           ) : (
           <EmployeeAttendance />
         ) : (

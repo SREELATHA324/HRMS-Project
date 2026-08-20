@@ -48,6 +48,7 @@ router.post('/overtime', validateOvertime, submitOvertime);
 router.put('/overtime/:id', roleCheck('admin', 'hr', 'manager'), validateOvertime, reviewOvertime);
 
 router.post('/correction', validateCorrection, requestCorrection);
+router.post('/corrections', validateCorrection, requestCorrection); 
 router.get('/corrections', getCorrections);
 router.put('/correction/:id', roleCheck('admin', 'hr', 'manager'), validateCorrection, reviewCorrection);
 
