@@ -9,8 +9,8 @@ import {
   ChevronDown,
   Loader2,
 } from "lucide-react";
-
-// REMOVED: EmployeeHeader import - it's already in EmployeeDashboard
+import EmployeeHeader from "../../components/employee/EmployeeHeader";
+import EmployeeSidebar from "../../components/employee/EmployeeSidebar";
 import StatCard from "../../components/admin/StatCard";
 import { api } from "../../services/api";
 
@@ -283,6 +283,7 @@ function EmployeeAttendance({ onNavigate, onLogout }) {
 
   return (
     <div className="employee-attendance-content">
+      
       <div className="admin-dashboard-content employee-attendance-page">
         {/* PAGE HEADING */}
 
