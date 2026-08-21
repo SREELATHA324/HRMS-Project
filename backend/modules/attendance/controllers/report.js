@@ -9,11 +9,12 @@ function getLocalDateString() {
 }
 
 async function getDailyReport(req, res) {
-    const { date } = req.query;
+    const { date, status, department } = req.query;
     const targetDate = date || getLocalDateString();
 
     try {
         const loggedInEmployee = await getEmployeeByUserId(req.user.id);
+
         if (!loggedInEmployee) {
             return res.status(404).json({
                 success: false,
@@ -21,67 +22,159 @@ async function getDailyReport(req, res) {
             });
         }
 
-        const role = req.user.role ? req.user.role.toLowerCase() : '';
-        if (role !== 'admin' && role !== 'hr' && role !== 'manager') {
+        const role = req.user.role
+            ? req.user.role.toLowerCase()
+            : '';
+
+        if (!['admin', 'hr', 'manager'].includes(role)) {
             return res.status(403).json({
                 success: false,
                 message: 'Forbidden: Insufficient permissions to view daily report'
             });
         }
 
-        let empQuery = 'SELECT COUNT(*) FROM employees WHERE deleted_at IS NULL';
-        let empParams = [];
+        let query = `
+    SELECT
+        ar.id AS attendance_id,
+        ar.attendance_date,
+        ar.check_in,
+        ar.check_out,
+        COALESCE(ar.working_hours, 0) AS working_hours,
+        ar.status,
+        ar.is_late,
+        ar.is_early_checkout,
+        COALESCE(ar.overtime_hours, 0) AS overtime_hours,
+
+        e.id AS employee_id,
+        e."employeeCode" AS employee_code,
+        e."firstName",
+        e."lastName",
+        CONCAT(
+            e."firstName",
+            CASE
+                WHEN e."lastName" IS NOT NULL
+                AND e."lastName" <> ''
+                THEN ' ' || e."lastName"
+                ELSE ''
+            END
+        ) AS employee_name,
+
+        d.name AS department
+
+    FROM employees e
+
+    LEFT JOIN departments d
+        ON e."departmentId" = d.id
+
+    LEFT JOIN attendance_records ar
+        ON ar.employee_id = e.id
+        AND ar.attendance_date = $1
+
+    WHERE e.deleted_at IS NULL
+`;
+
+        const params = [targetDate];
+        let paramIndex = 2;
+
+        // MANAGER CAN ONLY SEE TEAM MEMBERS
         if (role === 'manager') {
-            empQuery += ' AND ("reportingManagerId" = $1 OR id = $1)';
-            empParams.push(loggedInEmployee.id);
+            query += ` AND e."reportingManagerId" = $${paramIndex}`;
+            params.push(loggedInEmployee.id);
+            paramIndex++;
         }
 
-        const empCountRes = await pool.query(empQuery, empParams);
-        const totalEmployees = parseInt(empCountRes.rows[0].count) || 0;
-
-        let attQuery = `
-            SELECT ar.* FROM attendance_records ar
-            JOIN employees e ON ar.employee_id = e.id
-            WHERE ar.attendance_date = $1 AND e.deleted_at IS NULL
-        `;
-        const attParams = [targetDate];
-        if (role === 'manager') {
-            attQuery += ' AND (e."reportingManagerId" = $2 OR e.id = $2)';
-            attParams.push(loggedInEmployee.id);
+        // STATUS FILTER
+        if (status) {
+            query += `
+                AND LOWER(
+                    COALESCE(ar.status, 'Absent')
+                ) = LOWER($${paramIndex})
+            `;
+            params.push(status);
+            paramIndex++;
         }
 
-        const attRes = await pool.query(attQuery, attParams);
-        const records = attRes.rows;
-
-        let presentCount = 0;
-        let halfDayCount = 0;
-        let absentCount = 0;
-        let lateArrivals = 0;
-        let earlyCheckouts = 0;
-        let totalWorkingHours = 0;
-        let totalOvertime = 0;
-
-        records.forEach(r => {
-            if (r.status === 'Present') presentCount++;
-            else if (r.status === 'Half-Day') halfDayCount++;
-            else if (r.status === 'Absent') absentCount++;
-
-            if (r.is_late) lateArrivals++;
-            if (r.is_early_checkout) earlyCheckouts++;
-
-            totalWorkingHours += parseFloat(r.working_hours) || 0;
-            totalOvertime += parseFloat(r.overtime_hours) || 0;
-        });
-
-        const unaccounted = Math.max(0, totalEmployees - records.length);
-        absentCount += unaccounted;
-
-        let attendancePercentage = 0;
-        if (totalEmployees > 0) {
-            attendancePercentage = parseFloat((((presentCount + (halfDayCount * 0.5)) / totalEmployees) * 100).toFixed(2));
+        // DEPARTMENT FILTER
+        if (department) {
+            query += `
+                AND LOWER(COALESCE(d.name, ''))
+                = LOWER($${paramIndex})
+            `;
+            params.push(department);
+            paramIndex++;
         }
 
-        res.status(200).json({
+       query += `
+    ORDER BY e."firstName" ASC, e."lastName" ASC`;
+
+        const result = await pool.query(query, params);
+
+        const records = result.rows.map((record) => ({
+            ...record,
+
+            status:
+                record.status ||
+                'Absent',
+
+            working_hours:
+                parseFloat(record.working_hours || 0),
+
+            overtime_hours:
+                parseFloat(record.overtime_hours || 0)
+        }));
+
+        const totalEmployees = records.length;
+
+        const presentCount = records.filter(
+            (record) =>
+                String(record.status).toLowerCase() === 'present'
+        ).length;
+
+        const halfDayCount = records.filter(
+            (record) =>
+                String(record.status).toLowerCase() === 'half-day'
+        ).length;
+
+        const absentCount = records.filter(
+            (record) =>
+                String(record.status).toLowerCase() === 'absent'
+        ).length;
+
+        const lateArrivals = records.filter(
+            (record) => record.is_late === true
+        ).length;
+
+        const earlyCheckouts = records.filter(
+            (record) => record.is_early_checkout === true
+        ).length;
+
+        const totalWorkingHours = records.reduce(
+            (sum, record) =>
+                sum + parseFloat(record.working_hours || 0),
+            0
+        );
+
+        const totalOvertime = records.reduce(
+            (sum, record) =>
+                sum + parseFloat(record.overtime_hours || 0),
+            0
+        );
+
+        const attendancePercentage =
+            totalEmployees > 0
+                ? parseFloat(
+                    (
+                        (
+                            presentCount +
+                            halfDayCount * 0.5
+                        ) /
+                        totalEmployees *
+                        100
+                    ).toFixed(2)
+                )
+                : 0;
+
+        return res.status(200).json({
             success: true,
             data: {
                 date: targetDate,
@@ -91,15 +184,23 @@ async function getDailyReport(req, res) {
                 halfDayCount,
                 lateArrivals,
                 earlyCheckouts,
-                totalWorkingHours: parseFloat(totalWorkingHours.toFixed(2)),
-                totalOvertime: parseFloat(totalOvertime.toFixed(2)),
-                attendancePercentage
+                totalWorkingHours: parseFloat(
+                    totalWorkingHours.toFixed(2)
+                ),
+                totalOvertime: parseFloat(
+                    totalOvertime.toFixed(2)
+                ),
+                attendancePercentage,
+
+                // THIS IS REQUIRED FOR TEAM ATTENDANCE
+                records
             }
         });
 
     } catch (error) {
         console.error('Get daily report error:', error);
-        res.status(500).json({
+
+        return res.status(500).json({
             success: false,
             message: 'Internal server error'
         });

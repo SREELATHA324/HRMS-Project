@@ -343,27 +343,16 @@ function Attendance({ onBack }) {
 
   const openEdit = (record) => {
     setEditRecord(record);
-
+     const extractTimeOnly = (timestamp) => {
+      if (!timestamp) return "";
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) return "";
+      return date.toTimeString().slice(0, 5);
+    };
     setEditForm({
-      check_in: record?.check_in
-        ? new Date(
-            record.check_in
-          )
-            .toISOString()
-            .slice(0, 16)
-        : "",
-
-      check_out: record?.check_out
-        ? new Date(
-            record.check_out
-          )
-            .toISOString()
-            .slice(0, 16)
-        : "",
-
-      status:
-        getStatus(record),
-
+      check_in: extractTimeOnly(record?.check_in),
+      check_out: extractTimeOnly(record?.check_out),
+      status: getStatus(record),
       reason: "",
     });
   };

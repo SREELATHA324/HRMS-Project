@@ -7,6 +7,7 @@ import {
   BarChart3,
   Settings,
   LogOut,
+  CalendarCheck,
 } from "lucide-react";
 
 const menuItems = [
@@ -26,14 +27,25 @@ const menuItems = [
     page: "team",
   },
   {
-    label: "Attendance",
-    icon: CalendarDays,
+    id:"myAttendance",
+    label: "My Attendance",
+    icon: CalendarCheck,
+    page: "myAttendance",
+  },
+  {
+    label: "Team Attendance",
+    icon: Users,
     page: "attendance",
   },
   {
-    label: "Approvals",
+    label: "My Leaves",
+    icon: CalendarDays,
+    page: "myLeaves",
+  },
+  {
+    label: "Leave Approvals",
     icon: ClipboardCheck,
-    page: "approvals",
+    page: "leaveApprovals",
   },
   {
     label: "Reports",

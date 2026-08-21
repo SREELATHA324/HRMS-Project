@@ -8,12 +8,14 @@ import {
   AlertCircle,
   CheckCircle2,
   Ban,
+  ArrowLeft,
 } from "lucide-react";
 
-
+import EmployeeSidebar from "../../components/employee/EmployeeSidebar";
+import EmployeeHeader from "../../components/employee/EmployeeHeader";
 import { api } from "../../services/api";
 
-function EmployeeLeaves({ onNavigate, onLogout }) {
+function EmployeeLeaves({ onNavigate, onLogout,embedded=false, }) {
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [leaveBalance, setLeaveBalance] = useState([]);
   const [leaveRequests, setLeaveRequests] = useState([]);
@@ -22,6 +24,8 @@ function EmployeeLeaves({ onNavigate, onLogout }) {
   const [submitting, setSubmitting] = useState(false);
   const [cancellingId, setCancellingId] = useState(null);
 
+  // false = Leave Management
+  // true = Apply Leave Form
   const [showApplyForm, setShowApplyForm] = useState(false);
 
   const [error, setError] = useState("");
@@ -90,9 +94,6 @@ function EmployeeLeaves({ onNavigate, onLogout }) {
 
       // -------------------------------------------------------
       // LEAVE TYPES
-      // GET /api/leave/types
-      // Expected:
-      // { success: true, data: [...] }
       // -------------------------------------------------------
 
       const typesData = Array.isArray(typesResponse)
@@ -105,17 +106,6 @@ function EmployeeLeaves({ onNavigate, onLogout }) {
 
       // -------------------------------------------------------
       // LEAVE BALANCE
-      //
-      // Backend returns:
-      // {
-      //   success: true,
-      //   data: {
-      //     leaveTypes: [...],
-      //     totalAvailable: 0,
-      //     totalUsed: 0,
-      //     year: 2026
-      //   }
-      // }
       // -------------------------------------------------------
 
       const balanceData = balanceResponse?.data;
@@ -178,10 +168,22 @@ function EmployeeLeaves({ onNavigate, onLogout }) {
   };
 
   // =========================================================
-  // RESET FORM
+  // OPEN APPLY LEAVE FORM
   // =========================================================
 
-  const resetForm = () => {
+  const openApplyForm = () => {
+    setError("");
+    setSuccess("");
+    setShowApplyForm(true);
+  };
+
+  // =========================================================
+  // BACK TO LEAVE MANAGEMENT
+  // =========================================================
+
+  const backToLeaveManagement = () => {
+    setShowApplyForm(false);
+
     setFormData({
       leave_type_id: "",
       start_date: "",
@@ -189,7 +191,6 @@ function EmployeeLeaves({ onNavigate, onLogout }) {
       reason: "",
     });
 
-    setShowApplyForm(false);
     setError("");
   };
 
@@ -273,8 +274,10 @@ function EmployeeLeaves({ onNavigate, onLogout }) {
         reason: "",
       });
 
+      // Return to Leave Management
       setShowApplyForm(false);
 
+      // Reload balance and request history
       await loadLeaveData();
     } catch (err) {
       console.error("Leave application error:", err);
@@ -289,7 +292,7 @@ function EmployeeLeaves({ onNavigate, onLogout }) {
   };
 
   // =========================================================
-  // CANCEL LEAVE
+  // CANCEL LEAVE REQUEST
   // =========================================================
 
   const handleCancelLeave = async (leaveId) => {
@@ -381,544 +384,1189 @@ function EmployeeLeaves({ onNavigate, onLogout }) {
 
     return "leave-status-pending";
   };
-
-  return (
-    <div className="admin-layout">
-      
-        <div className="admin-dashboard-content employee-leaves-page">
-          {/* ================================================
-              PAGE HEADER
+  const leaveContent = (
+  <div className="employee-leaves-page">
+    {/* =================================================
+              APPLY LEAVE VIEW
           ================================================= */}
 
-          <div className="employee-leaves-header">
-            <div>
-              <h1>Leave Management</h1>
-              <p>
-                View company leave types, your leave balance,
-                and manage your leave requests.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              className="employee-apply-leave-button"
-              onClick={() => {
-                setShowApplyForm(
-                  (previous) => !previous
-                );
-
-                setError("");
-                setSuccess("");
-              }}
-            >
-              {showApplyForm ? (
-                <>
-                  <X size={18} />
-                  Close Form
-                </>
-              ) : (
-                <>
-                  <Plus size={18} />
-                  Apply Leave
-                </>
-              )}
-            </button>
-          </div>
-
-          {/* SUCCESS MESSAGE */}
-
-          {success && (
-            <div className="employee-leave-message employee-leave-success">
-              <CheckCircle2 size={19} />
-              <span>{success}</span>
-            </div>
-          )}
-
-          {/* ERROR MESSAGE */}
-
-          {error && (
-            <div className="employee-leave-message employee-leave-error">
-              <AlertCircle size={19} />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {/* ================================================
-              LEAVE TYPES & ALLOCATION
-          ================================================= */}
-
-          <section className="employee-leave-section">
-            <div className="employee-leave-section-header">
-              <div>
-                <h2>Leave Types & Allocation</h2>
-                <p>
-                  Company leave types and maximum allocation
-                  per year.
-                </p>
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="employee-leave-loading">
-                <Loader2
-                  size={24}
-                  className="employee-leave-spinner"
-                />
-                Loading leave types...
-              </div>
-            ) : leaveTypes.length === 0 ? (
-              <div className="employee-leave-empty">
-                No leave types are currently available.
-              </div>
-            ) : (
-              <div className="employee-leave-table-wrapper">
-                <table className="employee-leave-table">
-                  <thead>
-                    <tr>
-                      <th>Leave Type</th>
-                      <th>Code</th>
-                      <th>Description</th>
-                      <th>Days Per Year</th>
-                      <th>Paid</th>
-                      <th>Carry Forward</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {leaveTypes.map((type) => (
-                      <tr key={type.id}>
-                        <td>
-                          <div className="employee-leave-type">
-                            {type.color && (
-                              <span
-                                className="employee-leave-color-dot"
-                                style={{
-                                  backgroundColor: type.color,
-                                }}
-                              />
-                            )}
-
-                            <span>
-                              {type.name || "-"}
-                            </span>
-                          </div>
-                        </td>
-
-                        <td>
-                          {type.code || "-"}
-                        </td>
-
-                        <td className="employee-leave-reason">
-                          {type.description || "-"}
-                        </td>
-
-                        <td className="employee-leave-available">
-                          {type.max_days_per_year ?? 0}
-                        </td>
-
-                        <td>
-                          {type.is_paid ? "Yes" : "No"}
-                        </td>
-
-                        <td>
-                          {type.is_carry_forward
-                            ? "Yes"
-                            : "No"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-
-          {/* ================================================
-              LEAVE BALANCE
-          ================================================= */}
-
-          <section className="employee-leave-section">
-            <div className="employee-leave-section-header">
-              <div>
-                <h2>My Leave Balance</h2>
-                <p>
-                  Your current leave usage and available
-                  balance.
-                </p>
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="employee-leave-loading">
-                <Loader2
-                  size={24}
-                  className="employee-leave-spinner"
-                />
-                Loading leave balance...
-              </div>
-            ) : leaveBalance.length === 0 ? (
-              <div className="employee-leave-empty">
-                No leave balance information available.
-              </div>
-            ) : (
-              <div className="employee-leave-table-wrapper">
-                <table className="employee-leave-table">
-                  <thead>
-                    <tr>
-                      <th>Leave Type</th>
-                      <th>Opening</th>
-                      <th>Earned</th>
-                      <th>Used</th>
-                      <th>Available</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {leaveBalance.map((balance) => (
-                      <tr
-                        key={
-                          balance.leave_type_id ||
-                          balance.leave_type_name
-                        }
-                      >
-                        <td>
-                          <div className="employee-leave-type">
-                            {balance.color && (
-                              <span
-                                className="employee-leave-color-dot"
-                                style={{
-                                  backgroundColor:
-                                    balance.color,
-                                }}
-                              />
-                            )}
-
-                            <span>
-                              {balance.leave_type_name || "-"}
-                            </span>
-
-                            {balance.leave_type_code && (
-                              <small>
-                                {balance.leave_type_code}
-                              </small>
-                            )}
-                          </div>
-                        </td>
-
-                        <td>
-                          {balance.opening_balance ?? 0}
-                        </td>
-
-                        <td>
-                          {balance.earned_balance ?? 0}
-                        </td>
-
-                        <td>
-                          {balance.used_balance ?? 0}
-                        </td>
-
-                        <td className="employee-leave-available">
-                          {balance.closing_balance ?? 0}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-
-          {/* ================================================
-              APPLY LEAVE FORM
-          ================================================= */}
-
-          {showApplyForm && (
-            <section className="employee-apply-leave-card">
-              <div className="employee-apply-leave-card-header">
-                <div className="employee-leave-form-icon">
-                  <CalendarDays size={22} />
-                </div>
-
+          {showApplyForm ? (
+            <>
+              <div className="employee-leaves-header">
                 <div>
-                  <h2>Apply for Leave</h2>
+                  <h1>Apply Leave</h1>
                   <p>
                     Fill in the details below to submit your
                     leave request.
                   </p>
                 </div>
+
+                <button
+                  type="button"
+                  className="employee-leave-back-button"
+                  onClick={backToLeaveManagement}
+                  disabled={submitting}
+                >
+                  <ArrowLeft size={18} />
+                  Back to Leave Management
+                </button>
               </div>
 
-              <form
-                className="employee-apply-leave-form"
-                onSubmit={handleApplyLeave}
-              >
-                <div className="employee-leave-form-grid">
-                  <div className="employee-leave-form-group">
-                    <label htmlFor="leave_type_id">
-                      Leave Type <span>*</span>
-                    </label>
+              {/* ERROR */}
 
-                    <select
-                      id="leave_type_id"
-                      name="leave_type_id"
-                      value={formData.leave_type_id}
-                      onChange={handleChange}
-                      required
-                    >
-                      <option value="">
-                        Select Leave Type
-                      </option>
+              {error && (
+                <div className="employee-leave-message employee-leave-error">
+                  <AlertCircle size={19} />
+                  <span>{error}</span>
 
-                      {leaveTypes.map((type) => (
-                        <option
-                          key={type.id}
-                          value={type.id}
-                        >
-                          {type.name}
-                          {type.code
-                            ? ` (${type.code})`
-                            : ""}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="employee-leave-form-group">
-                    <label>Total Days</label>
-
-                    <input
-                      type="number"
-                      value={totalDays || ""}
-                      placeholder="Auto calculated"
-                      readOnly
-                    />
-                  </div>
-
-                  <div className="employee-leave-form-group">
-                    <label htmlFor="start_date">
-                      Start Date <span>*</span>
-                    </label>
-
-                    <input
-                      id="start_date"
-                      name="start_date"
-                      type="date"
-                      value={formData.start_date}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-
-                  <div className="employee-leave-form-group">
-                    <label htmlFor="end_date">
-                      End Date <span>*</span>
-                    </label>
-
-                    <input
-                      id="end_date"
-                      name="end_date"
-                      type="date"
-                      value={formData.end_date}
-                      onChange={handleChange}
-                      min={
-                        formData.start_date || undefined
-                      }
-                      required
-                    />
-                  </div>
-
-                  <div className="employee-leave-form-group employee-leave-form-full">
-                    <label htmlFor="reason">
-                      Reason <span>*</span>
-                    </label>
-
-                    <textarea
-                      id="reason"
-                      name="reason"
-                      rows="4"
-                      value={formData.reason}
-                      onChange={handleChange}
-                      placeholder="Enter the reason for your leave"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="employee-leave-form-actions">
                   <button
                     type="button"
-                    className="employee-leave-cancel-button"
-                    onClick={resetForm}
-                    disabled={submitting}
+                    onClick={() => setError("")}
                   >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="submit"
-                    className="employee-leave-submit-button"
-                    disabled={submitting}
-                  >
-                    {submitting ? (
-                      <>
-                        <Loader2
-                          size={18}
-                          className="employee-leave-spinner"
-                        />
-                        Submitting...
-                      </>
-                    ) : (
-                      <>
-                        <Send size={17} />
-                        Submit Request
-                      </>
-                    )}
+                    <X size={17} />
                   </button>
                 </div>
-              </form>
-            </section>
-          )}
+              )}
 
-          {/* ================================================
-              MY LEAVE REQUESTS
+              <section className="employee-apply-leave-card">
+                <div className="employee-apply-leave-card-header">
+                  <div className="employee-leave-form-icon">
+                    <CalendarDays size={22} />
+                  </div>
+
+                  <div>
+                    <h2>Leave Request Details</h2>
+                    <p>
+                      All fields marked with * are required.
+                    </p>
+                  </div>
+                </div>
+
+                <form
+                  className="employee-apply-leave-form"
+                  onSubmit={handleApplyLeave}
+                >
+                  <div className="employee-leave-form-grid">
+
+                    {/* LEAVE TYPE */}
+
+                    <div className="employee-leave-form-group">
+                      <label htmlFor="leave_type_id">
+                        Leave Type <span>*</span>
+                      </label>
+
+                      <select
+                        id="leave_type_id"
+                        name="leave_type_id"
+                        value={formData.leave_type_id}
+                        onChange={handleChange}
+                        required
+                      >
+                        <option value="">
+                          Select Leave Type
+                        </option>
+
+                        {leaveTypes.map((type) => (
+                          <option
+                            key={type.id}
+                            value={type.id}
+                          >
+                            {type.name}
+                            {type.code
+                              ? ` (${type.code})`
+                              : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* TOTAL DAYS */}
+
+                    <div className="employee-leave-form-group">
+                      <label>Total Days</label>
+
+                      <input
+                        type="number"
+                        value={totalDays || ""}
+                        placeholder="Auto calculated"
+                        readOnly
+                      />
+                    </div>
+
+                    {/* START DATE */}
+
+                    <div className="employee-leave-form-group">
+                      <label htmlFor="start_date">
+                        Start Date <span>*</span>
+                      </label>
+
+                      <input
+                        id="start_date"
+                        name="start_date"
+                        type="date"
+                        value={formData.start_date}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+
+                    {/* END DATE */}
+
+                    <div className="employee-leave-form-group">
+                      <label htmlFor="end_date">
+                        End Date <span>*</span>
+                      </label>
+
+                      <input
+                        id="end_date"
+                        name="end_date"
+                        type="date"
+                        value={formData.end_date}
+                        onChange={handleChange}
+                        min={
+                          formData.start_date || undefined
+                        }
+                        required
+                      />
+                    </div>
+
+                    {/* REASON */}
+
+                    <div className="employee-leave-form-group employee-leave-form-full">
+                      <label htmlFor="reason">
+                        Reason <span>*</span>
+                      </label>
+
+                      <textarea
+                        id="reason"
+                        name="reason"
+                        rows="5"
+                        value={formData.reason}
+                        onChange={handleChange}
+                        placeholder="Enter the reason for your leave"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="employee-leave-form-actions">
+                    <button
+                      type="button"
+                      className="employee-leave-cancel-button"
+                      onClick={backToLeaveManagement}
+                      disabled={submitting}
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="submit"
+                      className="employee-leave-submit-button"
+                      disabled={submitting}
+                    >
+                      {submitting ? (
+                        <>
+                          <Loader2
+                            size={18}
+                            className="employee-leave-spinner"
+                          />
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          <Send size={17} />
+                          Submit Request
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </section>
+            </>
+          ) : (
+            <>
+              {/* =============================================
+                  LEAVE MANAGEMENT VIEW
+              ============================================= */}
+
+              <div className="employee-leaves-header">
+                <div>
+                  <h1>Leave Management</h1>
+                  <p>
+                    View company leave types, your leave balance,
+                    and manage your leave requests.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  className="employee-apply-leave-button"
+                  onClick={openApplyForm}
+                >
+                  <Plus size={18} />
+                  Apply Leave
+                </button>
+              </div>
+
+              {/* SUCCESS */}
+
+              {success && (
+                <div className="employee-leave-message employee-leave-success">
+                  <CheckCircle2 size={19} />
+                  <span>{success}</span>
+
+                  <button
+                    type="button"
+                    onClick={() => setSuccess("")}
+                  >
+                    <X size={17} />
+                  </button>
+                </div>
+              )}
+
+              {/* ERROR */}
+
+              {error && (
+                <div className="employee-leave-message employee-leave-error">
+                  <AlertCircle size={19} />
+                  <span>{error}</span>
+
+                  <button
+                    type="button"
+                    onClick={() => setError("")}
+                  >
+                    <X size={17} />
+                  </button>
+                </div>
+              )}
+
+              {/* =============================================
+                  LEAVE TYPES & ALLOCATION
+              ============================================= */}
+
+              <section className="employee-leave-section">
+                <div className="employee-leave-section-header">
+                  <div>
+                    <h2>Leave Types & Allocation</h2>
+                    <p>
+                      Company leave types and maximum allocation
+                      per year.
+                    </p>
+                  </div>
+                </div>
+
+                {loading ? (
+                  <div className="employee-leave-loading">
+                    <Loader2
+                      size={24}
+                      className="employee-leave-spinner"
+                    />
+                    Loading leave types...
+                  </div>
+                ) : leaveTypes.length === 0 ? (
+                  <div className="employee-leave-empty">
+                    No leave types are currently available.
+                  </div>
+                ) : (
+                  <div className="employee-leave-table-wrapper">
+                    <table className="employee-leave-table">
+                      <thead>
+                        <tr>
+                          <th>Leave Type</th>
+                          <th>Code</th>
+                          <th>Description</th>
+                          <th>Days Per Year</th>
+                          <th>Paid</th>
+                          <th>Carry Forward</th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {leaveTypes.map((type) => (
+                          <tr key={type.id}>
+                            <td>
+                              <div className="employee-leave-type">
+                                {type.color && (
+                                  <span
+                                    className="employee-leave-color-dot"
+                                    style={{
+                                      backgroundColor:
+                                        type.color,
+                                    }}
+                                  />
+                                )}
+
+                                <span>
+                                  {type.name || "-"}
+                                </span>
+                              </div>
+                            </td>
+
+                            <td>{type.code || "-"}</td>
+
+                            <td className="employee-leave-reason">
+                              {type.description || "-"}
+                            </td>
+
+                            <td className="employee-leave-available">
+                              {type.max_days_per_year ?? 0}
+                            </td>
+
+                            <td>
+                              {type.is_paid ? "Yes" : "No"}
+                            </td>
+
+                            <td>
+                              {type.is_carry_forward
+                                ? "Yes"
+                                : "No"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </section>
+
+              {/* =============================================
+                  LEAVE BALANCE
+              ============================================= */}
+
+              <section className="employee-leave-section">
+                <div className="employee-leave-section-header">
+                  <div>
+                    <h2>My Leave Balance</h2>
+                    <p>
+                      Your current leave usage and available
+                      balance.
+                    </p>
+                  </div>
+                </div>
+
+                {loading ? (
+                  <div className="employee-leave-loading">
+                    <Loader2
+                      size={24}
+                      className="employee-leave-spinner"
+                    />
+                    Loading leave balance...
+                  </div>
+                ) : leaveBalance.length === 0 ? (
+                  <div className="employee-leave-empty">
+                    No leave balance information available.
+                  </div>
+                ) : (
+                  <div className="employee-leave-table-wrapper">
+                    <table className="employee-leave-table">
+                      <thead>
+                        <tr>
+                          <th>Leave Type</th>
+                          <th>Opening</th>
+                          <th>Earned</th>
+                          <th>Used</th>
+                          <th>Available</th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {leaveBalance.map((balance) => (
+                          <tr
+                            key={
+                              balance.leave_type_id ||
+                              balance.leave_type_name
+                            }
+                          >
+                            <td>
+                              <div className="employee-leave-type">
+                                {balance.color && (
+                                  <span
+                                    className="employee-leave-color-dot"
+                                    style={{
+                                      backgroundColor:
+                                        balance.color,
+                                    }}
+                                  />
+                                )}
+
+                                <span>
+                                  {balance.leave_type_name || "-"}
+                                </span>
+
+                                {balance.leave_type_code && (
+                                  <small>
+                                    {balance.leave_type_code}
+                                  </small>
+                                )}
+                              </div>
+                            </td>
+
+                            <td>
+                              {balance.opening_balance ?? 0}
+                            </td>
+
+                            <td>
+                              {balance.earned_balance ?? 0}
+                            </td>
+
+                            <td>
+                              {balance.used_balance ?? 0}
+                            </td>
+
+                            <td className="employee-leave-available">
+                              {balance.closing_balance ?? 0}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </section>
+
+              {/* =============================================
+                  MY LEAVE REQUESTS
+              ============================================= */}
+
+              <section className="employee-leave-section">
+                <div className="employee-leave-section-header">
+                  <div>
+                    <h2>My Leave Requests</h2>
+                    <p>
+                      View the status and details of your leave
+                      applications.
+                    </p>
+                  </div>
+                </div>
+
+                {loading ? (
+                  <div className="employee-leave-loading">
+                    <Loader2
+                      size={24}
+                      className="employee-leave-spinner"
+                    />
+                    Loading leave requests...
+                  </div>
+                ) : leaveRequests.length === 0 ? (
+                  <div className="employee-leave-empty">
+                    You have not submitted any leave requests yet.
+                  </div>
+                ) : (
+                  <div className="employee-leave-table-wrapper">
+                    <table className="employee-leave-table employee-leave-requests-table">
+                      <thead>
+                        <tr>
+                          <th>Leave ID</th>
+                          <th>Leave Type</th>
+                          <th>Start Date</th>
+                          <th>End Date</th>
+                          <th>Days</th>
+                          <th>Reason</th>
+                          <th>Applied Date</th>
+                          <th>Status</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {leaveRequests.map((request) => (
+                          <tr key={request.id}>
+                            <td>#{request.id}</td>
+
+                            <td>
+                              <div className="employee-leave-type">
+                                {request.leave_type_color && (
+                                  <span
+                                    className="employee-leave-color-dot"
+                                    style={{
+                                      backgroundColor:
+                                        request.leave_type_color,
+                                    }}
+                                  />
+                                )}
+
+                                <span>
+                                  {request.leave_type_name || "-"}
+                                </span>
+                              </div>
+                            </td>
+
+                            <td>
+                              {formatDate(request.start_date)}
+                            </td>
+
+                            <td>
+                              {formatDate(request.end_date)}
+                            </td>
+
+                            <td>
+                              {request.total_days ?? "-"}
+                            </td>
+
+                            <td className="employee-leave-reason">
+                              {request.reason || "-"}
+                            </td>
+
+                            <td>
+                              {formatDate(request.applied_date)}
+                            </td>
+
+                            <td>
+                              <span
+                                className={`employee-leave-status ${getStatusClass(
+                                  request.status
+                                )}`}
+                              >
+                                {request.status || "Pending"}
+                              </span>
+                            </td>
+
+                            <td>
+                              {String(
+                                request.status || ""
+                              ).toLowerCase() === "pending" ? (
+                                <button
+                                  type="button"
+                                  className="employee-leave-cancel-request-button"
+                                  onClick={() =>
+                                    handleCancelLeave(request.id)
+                                  }
+                                  disabled={
+                                    cancellingId === request.id
+                                  }
+                                >
+                                  {cancellingId === request.id ? (
+                                    <>
+                                      <Loader2
+                                        size={15}
+                                        className="employee-leave-spinner"
+                                      />
+                                      Cancelling...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Ban size={15} />
+                                      Cancel
+                                    </>
+                                  )}
+                                </button>
+                              ) : (
+                                <span className="employee-leave-no-action">
+                                  -
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </section>
+            </>
+          )}
+  </div>
+);
+
+if (embedded) {
+  return leaveContent;
+}
+  return (
+    <div className="admin-layout">
+      <EmployeeSidebar
+        activePage="leaves"
+        onNavigate={handleNavigation}
+        onLogout={onLogout}
+      />
+
+      <main className="admin-main">
+        <EmployeeHeader
+          onNavigate={handleNavigation}
+        />
+
+        <div className="admin-dashboard-content employee-leaves-page">
+
+          {/* =================================================
+              APPLY LEAVE VIEW
           ================================================= */}
 
-          <section className="employee-leave-section">
-            <div className="employee-leave-section-header">
-              <div>
-                <h2>My Leave Requests</h2>
-                <p>
-                  View the status and details of your leave
-                  applications.
-                </p>
+          {showApplyForm ? (
+            <>
+              <div className="employee-leaves-header">
+                <div>
+                  <h1>Apply Leave</h1>
+                  <p>
+                    Fill in the details below to submit your
+                    leave request.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  className="employee-leave-back-button"
+                  onClick={backToLeaveManagement}
+                  disabled={submitting}
+                >
+                  <ArrowLeft size={18} />
+                  Back to Leave Management
+                </button>
               </div>
-            </div>
 
-            {loading ? (
-              <div className="employee-leave-loading">
-                <Loader2
-                  size={24}
-                  className="employee-leave-spinner"
-                />
-                Loading leave requests...
-              </div>
-            ) : leaveRequests.length === 0 ? (
-              <div className="employee-leave-empty">
-                You have not submitted any leave requests yet.
-              </div>
-            ) : (
-              <div className="employee-leave-table-wrapper">
-                <table className="employee-leave-table employee-leave-requests-table">
-                  <thead>
-                    <tr>
-                      <th>Leave ID</th>
-                      <th>Leave Type</th>
-                      <th>Start Date</th>
-                      <th>End Date</th>
-                      <th>Days</th>
-                      <th>Reason</th>
-                      <th>Applied Date</th>
-                      <th>Status</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
+              {/* ERROR */}
 
-                  <tbody>
-                    {leaveRequests.map((request) => (
-                      <tr key={request.id}>
-                        <td>#{request.id}</td>
+              {error && (
+                <div className="employee-leave-message employee-leave-error">
+                  <AlertCircle size={19} />
+                  <span>{error}</span>
 
-                        <td>
-                          <div className="employee-leave-type">
-                            {request.leave_type_color && (
-                              <span
-                                className="employee-leave-color-dot"
-                                style={{
-                                  backgroundColor:
-                                    request.leave_type_color,
-                                }}
-                              />
-                            )}
+                  <button
+                    type="button"
+                    onClick={() => setError("")}
+                  >
+                    <X size={17} />
+                  </button>
+                </div>
+              )}
 
-                            <span>
-                              {request.leave_type_name || "-"}
-                            </span>
-                          </div>
-                        </td>
+              <section className="employee-apply-leave-card">
+                <div className="employee-apply-leave-card-header">
+                  <div className="employee-leave-form-icon">
+                    <CalendarDays size={22} />
+                  </div>
 
-                        <td>
-                          {formatDate(request.start_date)}
-                        </td>
+                  <div>
+                    <h2>Leave Request Details</h2>
+                    <p>
+                      All fields marked with * are required.
+                    </p>
+                  </div>
+                </div>
 
-                        <td>
-                          {formatDate(request.end_date)}
-                        </td>
+                <form
+                  className="employee-apply-leave-form"
+                  onSubmit={handleApplyLeave}
+                >
+                  <div className="employee-leave-form-grid">
 
-                        <td>
-                          {request.total_days ?? "-"}
-                        </td>
+                    {/* LEAVE TYPE */}
 
-                        <td className="employee-leave-reason">
-                          {request.reason || "-"}
-                        </td>
+                    <div className="employee-leave-form-group">
+                      <label htmlFor="leave_type_id">
+                        Leave Type <span>*</span>
+                      </label>
 
-                        <td>
-                          {formatDate(request.applied_date)}
-                        </td>
+                      <select
+                        id="leave_type_id"
+                        name="leave_type_id"
+                        value={formData.leave_type_id}
+                        onChange={handleChange}
+                        required
+                      >
+                        <option value="">
+                          Select Leave Type
+                        </option>
 
-                        <td>
-                          <span
-                            className={`employee-leave-status ${getStatusClass(
-                              request.status
-                            )}`}
+                        {leaveTypes.map((type) => (
+                          <option
+                            key={type.id}
+                            value={type.id}
                           >
-                            {request.status || "Pending"}
-                          </span>
-                        </td>
+                            {type.name}
+                            {type.code
+                              ? ` (${type.code})`
+                              : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-                        <td>
-                          {String(
-                            request.status || ""
-                          ).toLowerCase() === "pending" ? (
-                            <button
-                              type="button"
-                              className="employee-leave-cancel-request-button"
-                              onClick={() =>
-                                handleCancelLeave(request.id)
-                              }
-                              disabled={
-                                cancellingId === request.id
-                              }
-                            >
-                              {cancellingId === request.id ? (
-                                <>
-                                  <Loader2
-                                    size={15}
-                                    className="employee-leave-spinner"
-                                  />
-                                  Cancelling...
-                                </>
-                              ) : (
-                                <>
-                                  <Ban size={15} />
-                                  Cancel
-                                </>
-                              )}
-                            </button>
-                          ) : (
-                            <span className="employee-leave-no-action">
-                              -
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    {/* TOTAL DAYS */}
+
+                    <div className="employee-leave-form-group">
+                      <label>Total Days</label>
+
+                      <input
+                        type="number"
+                        value={totalDays || ""}
+                        placeholder="Auto calculated"
+                        readOnly
+                      />
+                    </div>
+
+                    {/* START DATE */}
+
+                    <div className="employee-leave-form-group">
+                      <label htmlFor="start_date">
+                        Start Date <span>*</span>
+                      </label>
+
+                      <input
+                        id="start_date"
+                        name="start_date"
+                        type="date"
+                        value={formData.start_date}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+
+                    {/* END DATE */}
+
+                    <div className="employee-leave-form-group">
+                      <label htmlFor="end_date">
+                        End Date <span>*</span>
+                      </label>
+
+                      <input
+                        id="end_date"
+                        name="end_date"
+                        type="date"
+                        value={formData.end_date}
+                        onChange={handleChange}
+                        min={
+                          formData.start_date || undefined
+                        }
+                        required
+                      />
+                    </div>
+
+                    {/* REASON */}
+
+                    <div className="employee-leave-form-group employee-leave-form-full">
+                      <label htmlFor="reason">
+                        Reason <span>*</span>
+                      </label>
+
+                      <textarea
+                        id="reason"
+                        name="reason"
+                        rows="5"
+                        value={formData.reason}
+                        onChange={handleChange}
+                        placeholder="Enter the reason for your leave"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="employee-leave-form-actions">
+                    <button
+                      type="button"
+                      className="employee-leave-cancel-button"
+                      onClick={backToLeaveManagement}
+                      disabled={submitting}
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="submit"
+                      className="employee-leave-submit-button"
+                      disabled={submitting}
+                    >
+                      {submitting ? (
+                        <>
+                          <Loader2
+                            size={18}
+                            className="employee-leave-spinner"
+                          />
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          <Send size={17} />
+                          Submit Request
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </section>
+            </>
+          ) : (
+            <>
+              {/* =============================================
+                  LEAVE MANAGEMENT VIEW
+              ============================================= */}
+
+              <div className="employee-leaves-header">
+                <div>
+                  <h1>Leave Management</h1>
+                  <p>
+                    View company leave types, your leave balance,
+                    and manage your leave requests.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  className="employee-apply-leave-button"
+                  onClick={openApplyForm}
+                >
+                  <Plus size={18} />
+                  Apply Leave
+                </button>
               </div>
-            )}
-          </section>
+
+              {/* SUCCESS */}
+
+              {success && (
+                <div className="employee-leave-message employee-leave-success">
+                  <CheckCircle2 size={19} />
+                  <span>{success}</span>
+
+                  <button
+                    type="button"
+                    onClick={() => setSuccess("")}
+                  >
+                    <X size={17} />
+                  </button>
+                </div>
+              )}
+
+              {/* ERROR */}
+
+              {error && (
+                <div className="employee-leave-message employee-leave-error">
+                  <AlertCircle size={19} />
+                  <span>{error}</span>
+
+                  <button
+                    type="button"
+                    onClick={() => setError("")}
+                  >
+                    <X size={17} />
+                  </button>
+                </div>
+              )}
+
+              {/* =============================================
+                  LEAVE TYPES & ALLOCATION
+              ============================================= */}
+
+              <section className="employee-leave-section">
+                <div className="employee-leave-section-header">
+                  <div>
+                    <h2>Leave Types & Allocation</h2>
+                    <p>
+                      Company leave types and maximum allocation
+                      per year.
+                    </p>
+                  </div>
+                </div>
+
+                {loading ? (
+                  <div className="employee-leave-loading">
+                    <Loader2
+                      size={24}
+                      className="employee-leave-spinner"
+                    />
+                    Loading leave types...
+                  </div>
+                ) : leaveTypes.length === 0 ? (
+                  <div className="employee-leave-empty">
+                    No leave types are currently available.
+                  </div>
+                ) : (
+                  <div className="employee-leave-table-wrapper">
+                    <table className="employee-leave-table">
+                      <thead>
+                        <tr>
+                          <th>Leave Type</th>
+                          <th>Code</th>
+                          <th>Description</th>
+                          <th>Days Per Year</th>
+                          <th>Paid</th>
+                          <th>Carry Forward</th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {leaveTypes.map((type) => (
+                          <tr key={type.id}>
+                            <td>
+                              <div className="employee-leave-type">
+                                {type.color && (
+                                  <span
+                                    className="employee-leave-color-dot"
+                                    style={{
+                                      backgroundColor:
+                                        type.color,
+                                    }}
+                                  />
+                                )}
+
+                                <span>
+                                  {type.name || "-"}
+                                </span>
+                              </div>
+                            </td>
+
+                            <td>{type.code || "-"}</td>
+
+                            <td className="employee-leave-reason">
+                              {type.description || "-"}
+                            </td>
+
+                            <td className="employee-leave-available">
+                              {type.max_days_per_year ?? 0}
+                            </td>
+
+                            <td>
+                              {type.is_paid ? "Yes" : "No"}
+                            </td>
+
+                            <td>
+                              {type.is_carry_forward
+                                ? "Yes"
+                                : "No"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </section>
+
+              {/* =============================================
+                  LEAVE BALANCE
+              ============================================= */}
+
+              <section className="employee-leave-section">
+                <div className="employee-leave-section-header">
+                  <div>
+                    <h2>My Leave Balance</h2>
+                    <p>
+                      Your current leave usage and available
+                      balance.
+                    </p>
+                  </div>
+                </div>
+
+                {loading ? (
+                  <div className="employee-leave-loading">
+                    <Loader2
+                      size={24}
+                      className="employee-leave-spinner"
+                    />
+                    Loading leave balance...
+                  </div>
+                ) : leaveBalance.length === 0 ? (
+                  <div className="employee-leave-empty">
+                    No leave balance information available.
+                  </div>
+                ) : (
+                  <div className="employee-leave-table-wrapper">
+                    <table className="employee-leave-table">
+                      <thead>
+                        <tr>
+                          <th>Leave Type</th>
+                          <th>Opening</th>
+                          <th>Earned</th>
+                          <th>Used</th>
+                          <th>Available</th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {leaveBalance.map((balance) => (
+                          <tr
+                            key={
+                              balance.leave_type_id ||
+                              balance.leave_type_name
+                            }
+                          >
+                            <td>
+                              <div className="employee-leave-type">
+                                {balance.color && (
+                                  <span
+                                    className="employee-leave-color-dot"
+                                    style={{
+                                      backgroundColor:
+                                        balance.color,
+                                    }}
+                                  />
+                                )}
+
+                                <span>
+                                  {balance.leave_type_name || "-"}
+                                </span>
+
+                                {balance.leave_type_code && (
+                                  <small>
+                                    {balance.leave_type_code}
+                                  </small>
+                                )}
+                              </div>
+                            </td>
+
+                            <td>
+                              {balance.opening_balance ?? 0}
+                            </td>
+
+                            <td>
+                              {balance.earned_balance ?? 0}
+                            </td>
+
+                            <td>
+                              {balance.used_balance ?? 0}
+                            </td>
+
+                            <td className="employee-leave-available">
+                              {balance.closing_balance ?? 0}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </section>
+
+              {/* =============================================
+                  MY LEAVE REQUESTS
+              ============================================= */}
+
+              <section className="employee-leave-section">
+                <div className="employee-leave-section-header">
+                  <div>
+                    <h2>My Leave Requests</h2>
+                    <p>
+                      View the status and details of your leave
+                      applications.
+                    </p>
+                  </div>
+                </div>
+
+                {loading ? (
+                  <div className="employee-leave-loading">
+                    <Loader2
+                      size={24}
+                      className="employee-leave-spinner"
+                    />
+                    Loading leave requests...
+                  </div>
+                ) : leaveRequests.length === 0 ? (
+                  <div className="employee-leave-empty">
+                    You have not submitted any leave requests yet.
+                  </div>
+                ) : (
+                  <div className="employee-leave-table-wrapper">
+                    <table className="employee-leave-table employee-leave-requests-table">
+                      <thead>
+                        <tr>
+                          <th>Leave ID</th>
+                          <th>Leave Type</th>
+                          <th>Start Date</th>
+                          <th>End Date</th>
+                          <th>Days</th>
+                          <th>Reason</th>
+                          <th>Applied Date</th>
+                          <th>Status</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {leaveRequests.map((request) => (
+                          <tr key={request.id}>
+                            <td>#{request.id}</td>
+
+                            <td>
+                              <div className="employee-leave-type">
+                                {request.leave_type_color && (
+                                  <span
+                                    className="employee-leave-color-dot"
+                                    style={{
+                                      backgroundColor:
+                                        request.leave_type_color,
+                                    }}
+                                  />
+                                )}
+
+                                <span>
+                                  {request.leave_type_name || "-"}
+                                </span>
+                              </div>
+                            </td>
+
+                            <td>
+                              {formatDate(request.start_date)}
+                            </td>
+
+                            <td>
+                              {formatDate(request.end_date)}
+                            </td>
+
+                            <td>
+                              {request.total_days ?? "-"}
+                            </td>
+
+                            <td className="employee-leave-reason">
+                              {request.reason || "-"}
+                            </td>
+
+                            <td>
+                              {formatDate(request.applied_date)}
+                            </td>
+
+                            <td>
+                              <span
+                                className={`employee-leave-status ${getStatusClass(
+                                  request.status
+                                )}`}
+                              >
+                                {request.status || "Pending"}
+                              </span>
+                            </td>
+
+                            <td>
+                              {String(
+                                request.status || ""
+                              ).toLowerCase() === "pending" ? (
+                                <button
+                                  type="button"
+                                  className="employee-leave-cancel-request-button"
+                                  onClick={() =>
+                                    handleCancelLeave(request.id)
+                                  }
+                                  disabled={
+                                    cancellingId === request.id
+                                  }
+                                >
+                                  {cancellingId === request.id ? (
+                                    <>
+                                      <Loader2
+                                        size={15}
+                                        className="employee-leave-spinner"
+                                      />
+                                      Cancelling...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Ban size={15} />
+                                      Cancel
+                                    </>
+                                  )}
+                                </button>
+                              ) : (
+                                <span className="employee-leave-no-action">
+                                  -
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </section>
+            </>
+          )}
         </div>
+      </main>
     </div>
   );
 }

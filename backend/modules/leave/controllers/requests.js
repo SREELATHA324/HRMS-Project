@@ -76,10 +76,19 @@ async function applyLeave(req, res) {
 }
 
 async function getLeaveRequests(req, res) {
-    const { status, fromDate, toDate, employeeId } = req.query;
+    const {
+        status,
+        fromDate,
+        toDate,
+        employeeId,
+        scope
+    } = req.query;
 
     try {
-        const loggedInEmployee = await getEmployeeByUserId(req.user.id);
+        const loggedInEmployee = await getEmployeeByUserId(
+            req.user.id
+        );
+
         if (!loggedInEmployee) {
             return res.status(404).json({
                 success: false,
@@ -87,70 +96,165 @@ async function getLeaveRequests(req, res) {
             });
         }
 
-        const role = req.user.role ? req.user.role.toLowerCase() : '';
+        const role = req.user.role
+            ? req.user.role.toLowerCase()
+            : '';
+
         let query = `
-            SELECT lr.*, 
-                   lt.name as leave_type_name,
-                   lt.color as leave_type_color,
-                   e."firstName" as employee_first_name,
-                   e."lastName" as employee_last_name,
-                   e."employeeCode" as employee_code,
-                   CONCAT(a."firstName", ' ', a."lastName") as approver_name
+            SELECT
+                lr.*,
+                lt.name AS leave_type_name,
+                lt.color AS leave_type_color,
+                e."firstName" AS employee_first_name,
+                e."lastName" AS employee_last_name,
+                e."employeeCode" AS employee_code,
+                CONCAT(
+                    COALESCE(a."firstName", ''),
+                    ' ',
+                    COALESCE(a."lastName", '')
+                ) AS approver_name
+
             FROM leave_requests lr
-            JOIN leave_types lt ON lr.leave_type_id = lt.id
-            JOIN employees e ON lr.employee_id = e.id
-            LEFT JOIN employees a ON lr.approved_by = a.id
+
+            JOIN leave_types lt
+                ON lr.leave_type_id = lt.id
+
+            JOIN employees e
+                ON lr.employee_id = e.id
+
+            LEFT JOIN employees a
+                ON lr.approved_by = a.id
+
             WHERE lr.deleted_at IS NULL
         `;
+
         const params = [];
         let paramCount = 1;
 
+        // =====================================================
+        // ADMIN / HR
+        // =====================================================
+
         if (role === 'admin' || role === 'hr') {
+
             if (employeeId) {
-                query += ` AND lr.employee_id = $${paramCount}`;
+                query += `
+                    AND lr.employee_id = $${paramCount}
+                `;
+
                 params.push(employeeId);
                 paramCount++;
             }
+
+        // =====================================================
+        // MANAGER
+        // =====================================================
+
         } else if (role === 'manager') {
-            query += ` AND (e."reportingManagerId" = $${paramCount} OR lr.employee_id = $${paramCount})`;
-            params.push(loggedInEmployee.id);
-            paramCount++;
+
+            // MANAGER'S OWN LEAVES
+            if (scope === 'mine') {
+                query += `
+                    AND lr.employee_id = $${paramCount}
+                `;
+
+                params.push(loggedInEmployee.id);
+                paramCount++;
+            }
+
+            // TEAM LEAVE REQUESTS
+            else if (scope === 'team') {
+                query += `
+                    AND e."reportingManagerId" = $${paramCount}
+                `;
+
+                params.push(loggedInEmployee.id);
+                paramCount++;
+            }
+
+            // DEFAULT: MANAGER'S OWN LEAVES
+            else {
+                query += `
+                    AND lr.employee_id = $${paramCount}
+                `;
+
+                params.push(loggedInEmployee.id);
+                paramCount++;
+            }
+
+        // =====================================================
+        // NORMAL EMPLOYEE
+        // =====================================================
+
         } else {
-            query += ` AND lr.employee_id = $${paramCount}`;
+            query += `
+                AND lr.employee_id = $${paramCount}
+            `;
+
             params.push(loggedInEmployee.id);
             paramCount++;
         }
 
+        // =====================================================
+        // STATUS FILTER
+        // =====================================================
+
         if (status && status !== 'All') {
-            query += ` AND lr.status = $${paramCount}`;
+            query += `
+                AND lr.status = $${paramCount}
+            `;
+
             params.push(status);
             paramCount++;
         }
 
+        // =====================================================
+        // FROM DATE FILTER
+        // =====================================================
+
         if (fromDate) {
-            query += ` AND lr.start_date >= $${paramCount}`;
+            query += `
+                AND lr.start_date >= $${paramCount}
+            `;
+
             params.push(fromDate);
             paramCount++;
         }
 
+        // =====================================================
+        // TO DATE FILTER
+        // =====================================================
+
         if (toDate) {
-            query += ` AND lr.end_date <= $${paramCount}`;
+            query += `
+                AND lr.end_date <= $${paramCount}
+            `;
+
             params.push(toDate);
             paramCount++;
         }
 
-        query += ` ORDER BY lr.applied_date DESC`;
+        query += `
+            ORDER BY lr.applied_date DESC
+        `;
 
-        const result = await pool.query(query, params);
+        const result = await pool.query(
+            query,
+            params
+        );
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             data: result.rows
         });
 
     } catch (error) {
-        console.error('Get leave requests error:', error);
-        res.status(500).json({
+        console.error(
+            'Get leave requests error:',
+            error
+        );
+
+        return res.status(500).json({
             success: false,
             message: 'Internal server error'
         });
@@ -232,6 +336,23 @@ async function approveLeave(req, res) {
         }
 
         const leave = leaveRes.rows[0];
+        if (role === 'manager') {
+            const teamCheck = await pool.query(
+                `SELECT id
+                FROM employees
+                WHERE id = $1
+                AND "reportingManagerId" = $2
+                AND deleted_at IS NULL`,
+                [leave.employee_id, employee.id]
+            );
+
+            if (teamCheck.rows.length === 0) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'You can only approve leave requests from employees reporting to you'
+                });
+            }
+        }
 
         await pool.query('BEGIN');
 
@@ -311,6 +432,24 @@ async function rejectLeave(req, res) {
         }
 
         const leave = leaveRes.rows[0];
+        if (role === 'manager') {
+        const teamCheck = await pool.query(
+        `SELECT id
+         FROM employees
+         WHERE id = $1
+           AND "reportingManagerId" = $2
+           AND deleted_at IS NULL`,
+        [leave.employee_id, employee.id]
+    );
+
+    if (teamCheck.rows.length === 0) {
+        return res.status(403).json({
+            success: false,
+            message:
+                'You can only reject leave requests from employees reporting to you'
+        });
+    }
+}
 
         await pool.query(
             `UPDATE leave_requests SET 
