@@ -1,17 +1,15 @@
-# Use Node.js LTS version
 FROM node:18-alpine
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy package.json from the backend folder (relative to repo root)
+COPY backend/package.json ./
 
-# Install dependencies (including dev dependencies for bcrypt)
+# Install dependencies
 RUN npm install
 
-# Copy source code
-COPY . .
+# Copy all backend source code
+COPY backend/ ./
 
 # Expose port
 EXPOSE 5000
