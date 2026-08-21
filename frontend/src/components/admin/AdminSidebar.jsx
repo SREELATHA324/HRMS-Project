@@ -36,7 +36,7 @@ const menuItems = [
   {
     label: "Leave",
     icon: CalendarDays,
-    page: "leave",
+    page: "leaves",
   },
   {
     label: "Payroll",

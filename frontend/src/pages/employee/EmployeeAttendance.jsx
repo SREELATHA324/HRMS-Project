@@ -282,10 +282,18 @@ function EmployeeAttendance({ onNavigate, onLogout }) {
   const totalWorkingHoursDisplay = formatWorkingHours(monthlyStats.totalWorkingHours);
 
   return (
-    <div className="employee-attendance-content">
-      
-      <div className="admin-dashboard-content employee-attendance-page">
-        {/* PAGE HEADING */}
+    <div className="admin-layout">
+      <EmployeeSidebar
+        activePage="attendance"
+        onNavigate={handleNavigation}
+        onLogout={onLogout}
+      />
+      <main className="admin-main">
+        <EmployeeHeader onNavigate={handleNavigation} />
+        <div className="employee-attendance-content">
+          
+          <div className="admin-dashboard-content employee-attendance-page">
+            {/* PAGE HEADING */}
 
         <div className="admin-page-heading attendance-page-heading">
           <div>
@@ -508,6 +516,8 @@ function EmployeeAttendance({ onNavigate, onLogout }) {
           </div>
         </section>
       </div>
+      </div>
+      </main>
     </div>
   );
 }

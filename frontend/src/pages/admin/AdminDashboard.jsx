@@ -13,6 +13,7 @@ import AdminHeader from "../../components/admin/AdminHeader";
 import StatCard from "../../components/admin/StatCard";
 import Profile from "../profile/Profile";
 import Attendance from "./Attendance";
+import AdminLeaves from "./AdminLeaves";
 import { api } from "../../services/api";
 
 function AdminDashboard({ onNavigate, onLogout }) {
@@ -64,12 +65,15 @@ function AdminDashboard({ onNavigate, onLogout }) {
     if (onNavigate) {
       onNavigate(page);
     }
-    if (page === "attendance") {
+    if (page === "attendance" || page === "leaves") {
   if (onNavigate) {
-    onNavigate("attendance");
+    onNavigate(page);
   }
   return;
 }
+if (onNavigate) {
+    onNavigate(page);
+  }
   };
 
   const getActivityIcon = (type) => {

@@ -14,7 +14,7 @@ import Attendance from "./pages/admin/Attendance";
 import AddEmployee from "./pages/admin/AddEmployee";
 import EmployeeDetails from "./pages/admin/EmployeeDetails";
 import EditEmployee from "./pages/admin/EditEmployee";
-
+import AdminLeaves from "./pages/admin/AdminLeaves";
 /* ================= MANAGER PAGES ================= */
 import ManagerDashboard from "./pages/manager/ManagerDashboard";
 
@@ -59,7 +59,9 @@ function App() {
     if (hash.startsWith("#admin/employees/edit/")) {
       return "editEmployee";
     }
-
+    if (hash === "#admin/leaves") {
+      return "leaves";
+    }
     /* ---------- Manager ---------- */
     if (hash === "#manager/dashboard") {
       return "managerDashboard";
@@ -139,7 +141,7 @@ function App() {
       addEmployee: "admin/employees/add",
       employeeDetails: `admin/employees/view/${value}`,
       editEmployee: `admin/employees/edit/${value}`,
-
+      leaves: "admin/leaves",
       /* ---------- Manager ---------- */
       managerDashboard: "manager/dashboard",
 
@@ -395,6 +397,14 @@ function App() {
           onNavigate={navigate}
         />
       )}
+      {
+        page === "leaves" && (
+          <AdminLeaves
+            onNavigate={navigate}
+            onLogout={handleLogout}
+          />
+        )
+      }
 
       {/* =====================================================
           MANAGER DASHBOARD
