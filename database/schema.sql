@@ -417,6 +417,40 @@ CREATE TABLE leave_balances (
     CONSTRAINT unique_employee_leave_balance UNIQUE(employee_id, leave_type_id, year)
 );
 
+//task module
+
+CREATE TABLE IF NOT EXISTS tasks (
+    id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    assigned_to BIGINT NOT NULL,
+    assigned_by BIGINT NOT NULL,
+    priority VARCHAR(20) DEFAULT 'medium',
+    status VARCHAR(20) DEFAULT 'pending',
+    due_date DATE,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP WITH TIME ZONE,
+
+    CONSTRAINT fk_tasks_assigned_to
+        FOREIGN KEY (assigned_to)
+        REFERENCES employees(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_tasks_assigned_by
+        FOREIGN KEY (assigned_by)
+        REFERENCES employees(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT chk_tasks_priority
+        CHECK (priority IN ('low', 'medium', 'high')),
+
+    CONSTRAINT chk_tasks_status
+        CHECK (status IN ('pending', 'in_progress', 'completed'))
+);
+
+
 
 CREATE INDEX idx_employees_userId
 ON employees("userId");
@@ -518,3 +552,34 @@ CREATE INDEX idx_leave_history_leave_request_id ON leave_history(leave_request_i
 CREATE INDEX idx_leave_history_employee_id ON leave_history(employee_id);
 
 CREATE INDEX idx_leave_policies_department_id ON leave_policies(department_id);
+
+
+//task indexes
+
+CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to
+ON tasks(assigned_to);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_assigned_by
+ON tasks(assigned_by);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_status
+ON tasks(status);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_deleted_at
+ON tasks(deleted_at)
+WHERE deleted_at IS NULL;
+
+CREATE OR REPLACE FUNCTION update_tasks_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_tasks_updated_at ON tasks;
+
+CREATE TRIGGER trigger_tasks_updated_at
+BEFORE UPDATE ON tasks
+FOR EACH ROW
+EXECUTE FUNCTION update_tasks_updated_at();
