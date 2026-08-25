@@ -15,6 +15,7 @@ import AddEmployee from "./pages/admin/AddEmployee";
 import EmployeeDetails from "./pages/admin/EmployeeDetails";
 import EditEmployee from "./pages/admin/EditEmployee";
 import AdminLeaves from "./pages/admin/AdminLeaves";
+import TaskManagement from "./pages/admin/TaskManagement";
 /* ================= MANAGER PAGES ================= */
 import ManagerDashboard from "./pages/manager/ManagerDashboard";
 
@@ -23,6 +24,7 @@ import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
 import EmployeeAttendance from "./pages/employee/EmployeeAttendance";
 import EmployeeAttendanceCorrection from "./pages/employee/EmployeeAttendanceCorrection";
 import EmployeeLeaves from "./pages/employee/EmployeeLeaves";
+import EmployeeTaskManagement from "./pages/employee/EmployeeTaskManagement";
 function App() {
   /* =========================================================
      GET CURRENT PAGE FROM URL HASH
@@ -62,6 +64,9 @@ function App() {
     if (hash === "#admin/leaves") {
       return "leaves";
     }
+    if (hash === "#admin/taskManagement") {
+      return "taskManagement";
+    }
     /* ---------- Manager ---------- */
     if (hash === "#manager/dashboard") {
       return "managerDashboard";
@@ -70,6 +75,9 @@ function App() {
     /* ---------- Employee ---------- */
     if (hash === "#employee/dashboard") {
       return "employeeDashboard";
+    }
+     if (hash === "#employee/tasks") {
+      return "tasks";
     }
 
     return "landing";
@@ -142,6 +150,7 @@ function App() {
       employeeDetails: `admin/employees/view/${value}`,
       editEmployee: `admin/employees/edit/${value}`,
       leaves: "admin/leaves",
+      taskManagement: "admin/taskManagement",
       /* ---------- Manager ---------- */
       managerDashboard: "manager/dashboard",
 
@@ -150,6 +159,7 @@ function App() {
       employeeAttendance: "employee/attendance",
       employeeAttendanceCorrection: `employee/attendance/correction/${value}`,
       employeeLeaves: "employee/leaves",
+      employeetaskManagement: "employee/tasks"
     };
 
     const hash = hashMap[pageName];
@@ -377,6 +387,13 @@ function App() {
           onNavigate={navigate}
         />
       )}
+      {
+        page==="taskManagement"&& (
+        <TaskManagement
+          onNavigate={navigate}
+          onLogout={handleLogout}
+        />
+       )}
 
       {/* =====================================================
           EMPLOYEE DETAILS - ADMIN
@@ -442,6 +459,12 @@ function App() {
       )}
       {page === "employeeLeaves" && (
         <EmployeeLeaves
+          onNavigate={navigate}
+          onLogout={handleLogout}
+        />
+      )}
+      {page === "employeetaskManagement" && (
+        <EmployeeTaskManagement
           onNavigate={navigate}
           onLogout={handleLogout}
         />

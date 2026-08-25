@@ -10,6 +10,7 @@ import {
   BarChart3,
   Settings,
   LogOut,
+  ListChecks
 } from "lucide-react";
 
 const menuItems = [
@@ -38,6 +39,11 @@ const menuItems = [
     icon: CalendarDays,
     page: "leaves",
   },
+  {
+  label: "Task Management",
+  icon: ListChecks,
+  page: "taskManagement",
+},
   {
     label: "Payroll",
     icon: Wallet,
