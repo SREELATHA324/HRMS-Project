@@ -87,6 +87,30 @@ const [leaveApprovals, setLeaveApprovals] = useState([]);
 const [approvalsLoading, setLeaveApprovalsLoading] = useState(false);
 const [approvalsError, setLeaveApprovalsError] = useState("");
 const [approvalActionLoading, setLeaveApprovalActionLoading] = useState(null);
+
+/* =========================================================
+   TASK MANAGEMENT STATES
+========================================================= */
+
+const [tasks, setTasks] = useState([]);
+const [tasksLoading, setTasksLoading] = useState(false);
+const [tasksError, setTasksError] = useState("");
+
+const [taskSearch, setTaskSearch] = useState("");
+const [taskStatus, setTaskStatus] = useState("");
+const [taskPriority, setTaskPriority] = useState("");
+
+const [showTaskForm, setShowTaskForm] = useState(false);
+const [taskSubmitting, setTaskSubmitting] = useState(false);
+const [taskFormError, setTaskFormError] = useState("");
+
+const [taskForm, setTaskForm] = useState({
+  title: "",
+  description: "",
+  assigned_to: "",
+  priority: "medium",
+  due_date: "",
+});
   /* =========================================================
      LOAD MANAGER DASHBOARD
   ========================================================= */
@@ -240,6 +264,13 @@ useEffect(() => {
     fetchLeaveApprovals();
   }
 }, [activeMenu]);
+
+useEffect(() => {
+  if (activeMenu === "tasks") {
+    fetchTasks();
+  }
+}, [activeMenu]);
+
 const managerLeaveTotalDays = useMemo(() => {
   const { start_date, end_date } = leaveFormData;
 
@@ -735,124 +766,6 @@ const handleManagerCancelLeave = async (leaveId) => {
   }
 };
 
-/* =========================================================
-   HANDLE APPLY LEAVE FORM
-========================================================= */
-
-const handleLeaveFormChange = (e) => {
-  const { name, value } = e.target;
-
-  setLeaveForm((previous) => ({
-    ...previous,
-    [name]: value,
-  }));
-};
-
-
-/* =========================================================
-   APPLY LEAVE
-========================================================= */
-
-const handleApplyLeave = async (e) => {
-  e.preventDefault();
-
-  if (
-    !leaveForm.leaveTypeId ||
-    !leaveForm.startDate ||
-    !leaveForm.endDate ||
-    !leaveForm.reason.trim()
-  ) {
-    setLeavesError("Please fill in all leave fields.");
-    return;
-  }
-
-  if (
-    new Date(leaveForm.endDate) <
-    new Date(leaveForm.startDate)
-  ) {
-    setLeavesError(
-      "End date cannot be earlier than the start date."
-    );
-    return;
-  }
-
-  try {
-    setLeaveSubmitting(true);
-    setLeavesError("");
-
-    const response = await api.post(
-      "/leave/apply",
-      {
-        leaveTypeId: leaveForm.leaveTypeId,
-        startDate: leaveForm.startDate,
-        endDate: leaveForm.endDate,
-        reason: leaveForm.reason.trim(),
-      }
-    );
-
-    if (response?.success) {
-      setLeaveForm({
-        leaveTypeId: "",
-        startDate: "",
-        endDate: "",
-        reason: "",
-      });
-
-      setShowApplyLeaveForm(false);
-
-      await fetchManagerLeaves();
-    } else {
-      setLeavesError(
-        response?.message || "Unable to apply for leave."
-      );
-    }
-  } catch (error) {
-    console.error("Apply leave error:", error);
-
-    setLeavesError(
-      error?.response?.data?.message ||
-        "Unable to apply for leave."
-    );
-  } finally {
-    setLeaveSubmitting(false);
-  }
-};
-
-
-/* =========================================================
-   CANCEL LEAVE
-========================================================= */
-
-const handleCancelLeave = async (leaveId) => {
-  const confirmed = window.confirm(
-    "Are you sure you want to cancel this leave request?"
-  );
-
-  if (!confirmed) return;
-
-  try {
-    const response = await api.put(
-      `/leave/requests/${leaveId}/cancel`
-    );
-
-    if (response?.success) {
-      await fetchManagerLeaves();
-    } else {
-      setLeavesError(
-        response?.message ||
-          "Unable to cancel leave request."
-      );
-    }
-  } catch (error) {
-    console.error("Cancel leave error:", error);
-
-    setLeavesError(
-      error?.response?.data?.message ||
-        "Unable to cancel leave request."
-    );
-  }
-};
-
 
 /* =========================================================
    FETCH LEAVE APPROVALS
@@ -1002,7 +915,147 @@ const formatLeaveDate = (dateValue) => {
     year: "numeric",
   });
 };
+/* =========================================================
+   FETCH TASKS
+========================================================= */
 
+const fetchTasks = async () => {
+  try {
+    setTasksLoading(true);
+    setTasksError("");
+
+    const response = await api.get("/tasks");
+
+    console.log("Tasks response:", response);
+
+    if (response?.success) {
+      const data = response?.data;
+
+      setTasks(
+        Array.isArray(data)
+          ? data
+          : Array.isArray(data?.tasks)
+          ? data.tasks
+          : []
+      );
+    } else {
+      setTasks([]);
+      setTasksError(
+        response?.message || "Unable to load tasks."
+      );
+    }
+  } catch (error) {
+    console.error("Tasks error:", error);
+
+    setTasks([]);
+
+    setTasksError(
+      error?.response?.data?.message ||
+      error?.response?.data?.detail ||
+      error?.message ||
+      "Unable to load tasks."
+    );
+  } finally {
+    setTasksLoading(false);
+  }
+};
+/* =========================================================
+   CREATE TASK
+========================================================= */
+
+const handleCreateTask = async (e) => {
+  e.preventDefault();
+
+  if (!taskForm.title.trim()) {
+    setTaskFormError("Task title is required.");
+    return;
+  }
+
+  if (!taskForm.assigned_to) {
+    setTaskFormError("Please select a team member.");
+    return;
+  }
+
+  if (!taskForm.due_date) {
+    setTaskFormError("Due date is required.");
+    return;
+  }
+
+  try {
+    setTaskSubmitting(true);
+    setTaskFormError("");
+
+    const response = await api.post("/tasks", {
+      title: taskForm.title.trim(),
+      description: taskForm.description.trim(),
+      assigned_to: Number(taskForm.assigned_to),
+      priority: taskForm.priority,
+      due_date: taskForm.due_date,
+    });
+
+    console.log("Create task response:", response);
+
+    if (response?.success) {
+      setTaskForm({
+        title: "",
+        description: "",
+        assigned_to: "",
+        priority: "medium",
+        due_date: "",
+      });
+
+      setShowTaskForm(false);
+
+      await fetchTasks();
+    } else {
+      setTaskFormError(
+        response?.message || "Unable to create task."
+      );
+    }
+  } catch (error) {
+    console.error("Create task error:", error);
+
+    setTaskFormError(
+      error?.response?.data?.message ||
+      error?.response?.data?.detail ||
+      error?.message ||
+      "Unable to create task."
+    );
+  } finally {
+    setTaskSubmitting(false);
+  }
+};
+/* =========================================================
+   GET TASK EMPLOYEE NAME
+========================================================= */
+
+const getTaskEmployeeName = (employeeId) => {
+  const employees = Array.isArray(dashboard?.team)
+    ? dashboard.team
+    : [];
+
+  const employee = employees.find((item) => {
+    const id =
+      item.id ||
+      item.employee_id ||
+      item.employeeId;
+
+    return Number(id) === Number(employeeId);
+  });
+
+  if (!employee) {
+    return "-";
+  }
+
+  return (
+    `${employee.first_name || employee.firstName || ""} ${
+      employee.last_name || employee.lastName || ""
+    }`.trim() ||
+    employee.name ||
+    employee.employee_name ||
+    "-"
+  );
+};
   /* =========================================================
      MY ATTENDANCE CARD
   ========================================================= */
@@ -2808,6 +2861,480 @@ const renderMyLeaves = () => {
   );
 };
 
+/* =========================================================
+   TASK MANAGEMENT PAGE
+========================================================= */
+
+const renderTaskManagement = () => {
+  const filteredTasks = tasks.filter((task) => {
+    const searchValue = taskSearch.toLowerCase().trim();
+
+    const taskTitle = String(
+      task.title || ""
+    ).toLowerCase();
+
+    const assignedEmployee = String(
+      task.employee_name ||
+        task.employeeName ||
+        task.assigned_to_name ||
+        task.assignedToName ||
+        `${task.employee_first_name || ""} ${
+          task.employee_last_name || ""
+        }`.trim() ||
+        ""
+    ).toLowerCase();
+
+    const matchesSearch =
+      !searchValue ||
+      taskTitle.includes(searchValue) ||
+      assignedEmployee.includes(searchValue);
+
+    const matchesStatus =
+      !taskStatus ||
+      String(task.status || "").toLowerCase() ===
+        taskStatus.toLowerCase();
+
+    const matchesPriority =
+      !taskPriority ||
+      String(task.priority || "").toLowerCase() ===
+        taskPriority.toLowerCase();
+
+    return (
+      matchesSearch &&
+      matchesStatus &&
+      matchesPriority
+    );
+  });
+
+  return (
+    <>
+      {/* ================= PAGE HEADER ================= */}
+
+      <div className="task-page-header">
+        <div className="task-page-title">
+          <h1>Task Management</h1>
+          <p>Create, assign, and monitor tasks for your team.</p>
+        </div>
+
+        <div className="task-header-actions">
+          <button
+            type="button"
+            className="task-refresh-button"
+            onClick={fetchTasks}
+            disabled={tasksLoading}
+          >
+            <RefreshCw
+              size={17}
+              className={tasksLoading ? "spin" : ""}
+            />
+            <span>Refresh</span>
+          </button>
+
+          <button
+            type="button"
+            className="task-create-button"
+            onClick={() => {
+              setTaskFormError("");
+              setShowTaskForm(true);
+            }}
+          >
+            <span className="task-create-plus">+</span>
+            Create Task
+          </button>
+        </div>
+      </div>
+
+      {/* ================= TASK LIST ================= */}
+
+      <section className="admin-panel task-management-panel">
+
+        {/* TOOLBAR */}
+
+        <div className="task-toolbar">
+
+          {/* SEARCH */}
+
+          <div className="admin-search task-search">
+            <Search size={17} />
+
+            <input
+              type="text"
+              placeholder="Search task or employee..."
+              value={taskSearch}
+              onChange={(e) =>
+                setTaskSearch(e.target.value)
+              }
+            />
+          </div>
+
+          {/* FILTERS */}
+
+          <div className="task-management-filters">
+
+            <div className="task-filter-group">
+              <label>Status</label>
+
+              <select
+                value={taskStatus}
+                onChange={(e) =>
+                  setTaskStatus(e.target.value)
+                }
+              >
+                <option value="">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="in_progress">
+                  In Progress
+                </option>
+                <option value="completed">
+                  Completed
+                </option>
+              </select>
+            </div>
+
+            <div className="task-filter-group">
+              <label>Priority</label>
+
+              <select
+                value={taskPriority}
+                onChange={(e) =>
+                  setTaskPriority(e.target.value)
+                }
+              >
+                <option value="">All Priority</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+
+        {/* ERROR */}
+
+        {tasksError && (
+          <div className="manager-attendance-error">
+            <AlertCircle size={17} />
+            <span>{tasksError}</span>
+          </div>
+        )}
+
+        {/* TABLE */}
+
+        <div className="admin-table-wrapper">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Task</th>
+                <th>Assigned To</th>
+                <th>Priority</th>
+                <th>Due Date</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {tasksLoading ? (
+                <tr>
+                  <td
+                    colSpan="5"
+                    className="admin-empty-state"
+                  >
+                    Loading tasks...
+                  </td>
+                </tr>
+              ) : filteredTasks.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan="5"
+                    className="admin-empty-state"
+                  >
+                    No tasks found.
+                  </td>
+                </tr>
+              ) : (
+                filteredTasks.map((task) => {
+                  const employeeFullName =
+                    `${task.employee_first_name || ""} ${
+                      task.employee_last_name || ""
+                    }`.trim();
+
+                  const assignedEmployee =
+                    employeeFullName ||
+                    task.employee_name ||
+                    task.employeeName ||
+                    task.assigned_to_name ||
+                    task.assignedToName ||
+                    "Unknown";
+
+                  return (
+                    <tr key={task.id}>
+
+                      {/* TASK */}
+
+                      <td>
+                        <div className="task-title-cell">
+                          <strong>
+                            {task.title || "Untitled Task"}
+                          </strong>
+
+                          {task.description && (
+                            <span>
+                              {task.description}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* ASSIGNED TO */}
+
+                      <td>
+                        <div className="admin-user-cell">
+                          <div className="admin-user-avatar">
+                            {renderInitials(assignedEmployee)}
+                          </div>
+
+                          <span>
+                            {assignedEmployee}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* PRIORITY */}
+
+                      <td>
+                        <span
+                          className={`task-priority-badge task-priority-${String(
+                            task.priority || "medium"
+                          ).toLowerCase()}`}
+                        >
+                          {String(
+                            task.priority || "Medium"
+                          )
+                            .replace("_", " ")
+                            .replace(
+                              /\b\w/g,
+                              (char) => char.toUpperCase()
+                            )}
+                        </span>
+                      </td>
+
+                      {/* DUE DATE */}
+
+                      <td>
+                        {task.due_date
+                          ? formatDate(task.due_date)
+                          : "-"}
+                      </td>
+
+                      {/* STATUS */}
+
+                      <td>
+                        <span
+                          className={`task-status-badge task-status-${String(
+                            task.status || "pending"
+                          ).toLowerCase()}`}
+                        >
+                          {String(
+                            task.status || "Pending"
+                          )
+                            .replace("_", " ")
+                            .replace(
+                              /\b\w/g,
+                              (char) => char.toUpperCase()
+                            )}
+                        </span>
+                      </td>
+
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+      </section>
+
+      {/* ================= CREATE TASK MODAL ================= */}
+
+      {showTaskForm && (
+        <div className="task-modal-overlay">
+          <div className="task-modal">
+
+            <div className="task-modal-header">
+              <div>
+                <h2>Create Task</h2>
+                <p>Assign a new task to a team member.</p>
+              </div>
+
+              <button
+                type="button"
+                className="task-modal-close"
+                onClick={() => {
+                  setShowTaskForm(false);
+                  setTaskFormError("");
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {taskFormError && (
+              <div className="manager-attendance-error">
+                <AlertCircle size={17} />
+                <span>{taskFormError}</span>
+              </div>
+            )}
+
+            <form
+              className="task-create-form"
+              onSubmit={handleCreateTask}
+            >
+
+              <div className="task-form-field">
+                <label>Task Title *</label>
+
+                <input
+                  type="text"
+                  placeholder="Enter task title"
+                  value={taskForm.title}
+                  onChange={(e) =>
+                    setTaskForm({
+                      ...taskForm,
+                      title: e.target.value,
+                    })
+                  }
+                  required
+                />
+              </div>
+
+              <div className="task-form-field">
+                <label>Description</label>
+
+                <textarea
+                  placeholder="Enter task description"
+                  value={taskForm.description}
+                  onChange={(e) =>
+                    setTaskForm({
+                      ...taskForm,
+                      description: e.target.value,
+                    })
+                  }
+                  rows="4"
+                />
+              </div>
+
+              <div className="task-form-grid">
+
+                <div className="task-form-field">
+                  <label>Assign To *</label>
+
+                  <select
+                    value={taskForm.assigned_to}
+                    onChange={(e) =>
+                      setTaskForm({
+                        ...taskForm,
+                        assigned_to: e.target.value,
+                      })
+                    }
+                    required
+                  >
+                    <option value="">
+                      Select employee
+                    </option>
+
+                    {teamMembers.map((employee) => {
+                      const fullName =
+                        `${employee.first_name || ""} ${
+                          employee.last_name || ""
+                        }`.trim() ||
+                        employee.name ||
+                        "Unknown";
+
+                      return (
+                        <option
+                          key={employee.id}
+                          value={employee.id}
+                        >
+                          {fullName}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                <div className="task-form-field">
+                  <label>Due Date *</label>
+
+                  <input
+                    type="date"
+                    value={taskForm.due_date}
+                    onChange={(e) =>
+                      setTaskForm({
+                        ...taskForm,
+                        due_date: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+
+                <div className="task-form-field">
+                  <label>Priority *</label>
+
+                  <select
+                    value={taskForm.priority}
+                    onChange={(e) =>
+                      setTaskForm({
+                        ...taskForm,
+                        priority: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+
+              </div>
+
+              <div className="task-form-actions">
+
+                <button
+                  type="button"
+                  className="task-cancel-button"
+                  onClick={() => {
+                    setShowTaskForm(false);
+                    setTaskFormError("");
+                  }}
+                  disabled={taskSubmitting}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="task-submit-button"
+                  disabled={taskSubmitting}
+                >
+                  {taskSubmitting
+                    ? "Creating..."
+                    : "Create Task"}
+                </button>
+
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
   /* =========================================================
      PROFILE PAGE
   ========================================================= */
@@ -2966,6 +3493,9 @@ const renderMyLeaves = () => {
     }
     if (activeMenu === "leaveApprovals") {
       return renderLeaveApprovals();
+    }
+    if (activeMenu === "tasks") {
+      return renderTaskManagement();
     }
 
     if (activeMenu === "profile") {

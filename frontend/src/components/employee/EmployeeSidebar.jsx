@@ -9,6 +9,7 @@ import {
   Bell,
   Settings,
   LogOut,
+  ClipboardList,
 } from "lucide-react";
 
 const menuItems = [
@@ -36,6 +37,12 @@ const menuItems = [
     page: "employeeLeaves",
     id: "leaves",
   },
+  {
+  label: "My Tasks",
+  icon: ClipboardList,
+  page: "employeetaskManagement",
+  id:"tasks"
+},
   {
     label: "Payroll",
     icon: Wallet,

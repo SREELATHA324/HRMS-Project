@@ -7,6 +7,7 @@ import {
   BarChart3,
   Settings,
   LogOut,
+  ListTodo,
   CalendarCheck,
 } from "lucide-react";
 
@@ -47,6 +48,11 @@ const menuItems = [
     icon: ClipboardCheck,
     page: "leaveApprovals",
   },
+  {
+  label: "Task Management",
+  icon: ListTodo,
+  page: "tasks",
+},
   {
     label: "Reports",
     icon: BarChart3,
